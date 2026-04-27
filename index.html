@@ -447,6 +447,7 @@
         <button id="addHighBtn" class="btn btn-high" type="button">首要</button>
         <button id="addMidBtn" class="btn btn-mid" type="button">次重要</button>
         <button id="addWaitBtn" class="btn btn-wait" type="button">等待</button>
+        <button id="addCalendarBtn" class="btn" type="button" style="background:#edf8ef;color:#2f7a4b;border:1px solid #cfe7d6;">行事曆</button>
         <button id="lihuiAssignBtn" class="togglePill hiddenByMode" type="button" aria-pressed="false">麗卉交辦</button>
         <button id="commonTaskBtn" class="togglePill" type="button" aria-pressed="false">共同</button>
         <button id="workTaskBtn" class="togglePill work hiddenByMode" type="button" aria-pressed="false">工作事項</button>
@@ -618,6 +619,7 @@
     addHighBtn: document.getElementById('addHighBtn'),
     addMidBtn: document.getElementById('addMidBtn'),
     addWaitBtn: document.getElementById('addWaitBtn'),
+    addCalendarBtn: document.getElementById('addCalendarBtn'),
     recurringModal: document.getElementById('recurringModal'),
     recurringModalText: document.getElementById('recurringModalText'),
     modalCompleteOccurrenceBtn: document.getElementById('modalCompleteOccurrenceBtn'),
@@ -835,6 +837,7 @@
     if(els.addHighBtn) els.addHighBtn.classList.toggle('hiddenByMode', isShaowei());
     if(els.addMidBtn) els.addMidBtn.classList.toggle('hiddenByMode', isShaowei());
     if(els.addWaitBtn) els.addWaitBtn.classList.toggle('hiddenByMode', isShaowei());
+    if(els.addCalendarBtn) els.addCalendarBtn.classList.toggle('hiddenByMode', isShaowei());
     if(els.assigneeTags) els.assigneeTags.style.display = isShaowei() ? 'none' : 'flex';
     if(els.boardWrap){
       els.boardWrap.style.display = 'grid';
@@ -1486,7 +1489,7 @@
     };
     const payload = {
       title, assignee, dueDate, note, lihuiAssign,
-      repeatType, repeatEvery, calendarOnly: false, group: targetGroup, done: false,
+      repeatType, repeatEvery, calendarOnly: !!calendarOnlyMode, group: targetGroup, done: false,
       occurrenceOriginalDate: dueDate || (editingTask && (editingTask.occurrenceOriginalDate || editingTask.dueDate) || ''), repeatEnabled: true, taskCategory
     };
 
@@ -2739,6 +2742,31 @@
       setDateError('');
     }
   };
+  const addCalendarTaskNow = () => {
+    const rawDate = String(els.dateInput && els.dateInput.value || '').trim();
+    const pickedDate = validateDateInput() || (lastSelectedDate ? (rocToIso(normalizeFlexibleDate(lastSelectedDate)) || lastSelectedDate) : '');
+    if(!rawDate && !pickedDate){
+      alert('行事曆事項請先選日期');
+      if(els.dateInput) els.dateInput.focus();
+      return;
+    }
+    if(!pickedDate){
+      if(els.dateInput) els.dateInput.focus();
+      return;
+    }
+    if(els.lihuiAssignBtn){
+      els.lihuiAssignBtn.dataset.active = '0';
+      els.lihuiAssignBtn.classList.remove('active');
+      els.lihuiAssignBtn.setAttribute('aria-pressed', 'false');
+    }
+    if(els.workTaskBtn){
+      els.workTaskBtn.dataset.active = '0';
+      els.workTaskBtn.classList.remove('active');
+      els.workTaskBtn.setAttribute('aria-pressed', 'false');
+    }
+    setCommonFormActive(false);
+    saveTask('high', false, { fromCalendar: true });
+  };
   if(els.repeatTypeInput){
     els.repeatTypeInput.addEventListener('focus', keepDateValue);
     els.repeatTypeInput.addEventListener('change', keepDateValue);
@@ -2751,6 +2779,7 @@
   els.addHighBtn.addEventListener('click', () => saveTask('high', false));
   els.addMidBtn.addEventListener('click', () => saveTask('mid', false));
   els.addWaitBtn.addEventListener('click', () => saveTask('wait', false));
+  if(els.addCalendarBtn) els.addCalendarBtn.addEventListener('click', addCalendarTaskNow);
   els.clearBtn.addEventListener('click', clearForm);
   els.exportBtn.addEventListener('click', exportState);
   els.importBtn.addEventListener('click', () => els.importFile.click());
