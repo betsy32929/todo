@@ -2765,7 +2765,7 @@
       els.workTaskBtn.setAttribute('aria-pressed', 'false');
     }
     setCommonFormActive(false);
-    saveTask('high', false, { fromCalendar: true });
+    saveTask('high', true, { fromCalendar: true });
   };
   if(els.repeatTypeInput){
     els.repeatTypeInput.addEventListener('focus', keepDateValue);
