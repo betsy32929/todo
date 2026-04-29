@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V47 手機固定桌機版面</title>
+<title>麗卉待辦 V48 循環事件進首要</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -515,7 +515,7 @@
       <summary class="cardHead foldHead">
         <span>重複任務設定</span>
         <div style="display:flex;align-items:center;gap:10px;">
-          <span class="statusText">只在這裡修改母任務；發生前一天自動進「重複任務」</span>
+          <span class="statusText">只在這裡修改母任務；發生前一天自動進「首要」</span>
           <span class="foldArrow">▶</span>
         </div>
       </summary>
@@ -1159,9 +1159,9 @@
         repeatType: '',
         repeatEvery: 0,
         calendarOnly: false,
-        group: task.group || master.group || 'high',
+        group: isLihui() ? 'high' : (task.group || master.group || 'high'),
         done: false,
-        order: nextOrderBySource(source, task.group || master.group || 'high'),
+        order: nextOrderBySource(source, isLihui() ? 'high' : (task.group || master.group || 'high')),
         createdAt: new Date().toISOString(),
         autoSpawnedFrom: master.id,
         sourceId: master.id,
@@ -1283,7 +1283,7 @@
   }
 
   function createOccurrenceInstanceInList(list, masterTask, occurrenceDate, groupName){
-    const group = groupName || masterTask.group || (isShaowei() ? 'simple' : 'high');
+    const group = groupName || (isLihui() ? 'high' : (masterTask.group || (isShaowei() ? 'simple' : 'high')));
     const sameGroup = list.filter(x => x.group === group).map(x => orderVal(x.order));
     const next = sameGroup.length ? Math.max(...sameGroup) + 1 : 1;
     const instance = {
@@ -1312,6 +1312,19 @@
     return instance;
   }
 
+
+
+  function getOccurrenceInstance(masterId, occurrenceDate){
+    return getOccurrenceInstanceFromList(state.tasks, masterId, occurrenceDate);
+  }
+
+  function ensureOccurrenceInstance(masterId, occurrenceDate){
+    const existing = getOccurrenceInstance(masterId, occurrenceDate);
+    if(existing) return existing;
+    const masterTask = state.tasks.find(x => x.id === masterId);
+    if(!masterTask) return null;
+    return createOccurrenceInstanceInList(state.tasks, masterTask, occurrenceDate, isLihui() ? 'high' : undefined);
+  }
   function ensureRecurringTasksForList(list, options = {}){
     const referenceKey = options.referenceKey || todayStr();
     const triggerMode = options.triggerMode || 'today';
@@ -1335,15 +1348,16 @@
   }
 
   function ensureRecurringTasksForToday(){
+    const lihuiRecurringListGroup = isLihui() ? 'high' : 'wait';
     const profileChanged = ensureRecurringTasksForList(state.tasks, {
       referenceKey: dateKey(addDays(today(), 1)),
       triggerMode: 'day_before',
-      groupName: 'wait'
+      groupName: lihuiRecurringListGroup
     });
     const sharedChanged = ensureRecurringTasksForList(sharedState.tasks, {
       referenceKey: dateKey(addDays(today(), 1)),
       triggerMode: 'day_before',
-      groupName: 'wait'
+      groupName: lihuiRecurringListGroup
     });
     if(profileChanged) persist();
     if(sharedChanged) persistShared({ statusText: '已儲存' });
