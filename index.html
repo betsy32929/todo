@@ -320,6 +320,7 @@
   .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid #d7dce7;background:#f5f7fb;color:#586272}
   .badge.handoff{background:#fff1f3;border-color:#efc6d0;color:#b34d67}
   .badge.common{background:#f3f5ff;border-color:#d9def8;color:#5061a8}
+  .badge.today{background:#fff0a8;border-color:#efd36f;color:#7a5b00;box-shadow:0 1px 0 rgba(255,255,255,.75)}
 
   .flatpickr-input[readonly]{background:#fff;cursor:pointer}
   @media (max-width:1250px){
@@ -1703,7 +1704,11 @@
     const sharedReviewWaitingForOther = sharedPendingReview && currentProfile === task.sharedCompleteBy;
     const visualDone = allowCheck && !!task.done;
     const meta = [];
-    if(task.dueDate) meta.push(`<span class="${isOverdue(task) ? 'danger' : ''}">${escapeHtml(fmtROC(task.dueDate))}${isOverdue(task) ? '｜已過期' : ''}</span>`);
+    if(task.dueDate){
+      const dueText = `<span class="${isOverdue(task) ? 'danger' : ''}">${escapeHtml(fmtROC(task.dueDate))}${isOverdue(task) ? '｜已過期' : ''}</span>`;
+      if(task.dueDate === todayStr()) meta.push(`${dueText} <span class="badge today">今天</span>`);
+      else meta.push(dueText);
+    }
     if(task.assignee) meta.push(escapeHtml('@' + task.assignee));
     if(task.lihuiAssign) meta.push(`<span class="badge handoff">麗卉交辦</span>`);
     else if(isShared) meta.push(`<span class="badge common">共同</span>`);
