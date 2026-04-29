@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V48 循環事件進首要</title>
+<title>麗卉待辦 V49 麗卉循環完成後隱藏</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -1140,6 +1140,16 @@
     const baseDate = task.occurrenceOriginalDate || task.dueDate || master.dueDate;
     const nextDate = getNextRecurringDate(master, baseDate);
     if(!nextDate) return false;
+
+    // 麗卉：循環事件完成後，本次直接隱藏；不要立刻產生下一次清單。
+    // 下一次會等到到期日前一天，由 ensureRecurringTasksForToday() 自動建立到「首要」。
+    if(isLihui()){
+      task.done = true;
+      task.showImmediately = false;
+      persistBySource(source, { statusText: source === 'shared' ? '共同任務已儲存' : '已儲存' });
+      return true;
+    }
+
     task.done = true;
     const existingNext = getTaskListBySource(source).find(x => x.autoSpawnedFrom === master.id && (x.occurrenceOriginalDate || x.dueDate) === nextDate);
     if(existingNext){
@@ -1159,9 +1169,9 @@
         repeatType: '',
         repeatEvery: 0,
         calendarOnly: false,
-        group: isLihui() ? 'high' : (task.group || master.group || 'high'),
+        group: task.group || master.group || 'high',
         done: false,
-        order: nextOrderBySource(source, isLihui() ? 'high' : (task.group || master.group || 'high')),
+        order: nextOrderBySource(source, task.group || master.group || 'high'),
         createdAt: new Date().toISOString(),
         autoSpawnedFrom: master.id,
         sourceId: master.id,
@@ -1693,7 +1703,9 @@
     if(task.repeatType) return false;
 
     if(task.autoSpawnedFrom){
-      if(task.showImmediately) return true;
+      // 麗卉不吃 showImmediately：完成本次後不能馬上顯示下一次，要等到下次前一天。
+      // 紹薇維持原規則，循環任務固定留在清單。
+      if(isShaowei() && task.showImmediately) return true;
       if(!task.dueDate) return true;
       const triggerDate = isShaowei() ? toDate(task.dueDate) : addDays(toDate(task.dueDate), -1);
       return today() >= triggerDate;
