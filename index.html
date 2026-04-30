@@ -1958,10 +1958,32 @@
       if(task.taskCategory === 'work') return 'mid';
       return 'high';
     }
+    // 麗卉：用「行事曆」新增的事項，提前一天出現在清單時一律歸在首要。
+    // 這裡也會修正舊資料原本被存成等待的情況。
+    if(task && task.calendarOnly && task.taskCategory !== 'work') return 'high';
     return task.group || (source === 'shared' ? 'mid' : 'high');
   }
 
+  function normalizeLihuiCalendarGroups(){
+    if(isShaowei()) return false;
+    let changed = false;
+    [state.tasks, sharedState.tasks].forEach(list => {
+      (list || []).forEach(t => {
+        if(t && t.calendarOnly && t.taskCategory !== 'work' && t.group !== 'high'){
+          t.group = 'high';
+          changed = true;
+        }
+      });
+    });
+    return changed;
+  }
+
   function visibleTasks(){
+    const groupFixed = normalizeLihuiCalendarGroups();
+    if(groupFixed){
+      saveAppStateLocally();
+      scheduleSupabaseSave();
+    }
     const profileTasks = state.tasks
       .filter(t => visibleBaseTask(t, 'profile'))
       .filter(t => !currentFilterUser || splitAssignees(t.assignee).includes(currentFilterUser))
@@ -3013,6 +3035,7 @@
       els.workTaskBtn.setAttribute('aria-pressed', 'false');
     }
     setCommonFormActive(false);
+    // 麗卉行事曆事項：前一天進清單時歸類首要。
     saveTask('high', true, { fromCalendar: true });
   };
   if(els.repeatTypeInput){
@@ -3059,11 +3082,6 @@
   if(els.commonTaskBtn){
     els.commonTaskBtn.addEventListener('click', () => {
       const title = (els.titleInput && els.titleInput.value || '').trim();
-      if(!title && !editingId && !editingSharedId){
-        alert('請先輸入事項');
-        if(els.titleInput) els.titleInput.focus();
-        return;
-      }
       if(els.lihuiAssignBtn){
         els.lihuiAssignBtn.dataset.active = '0';
         els.lihuiAssignBtn.classList.remove('active');
@@ -3075,6 +3093,10 @@
         els.workTaskBtn.setAttribute('aria-pressed', 'false');
       }
       setCommonFormActive(true);
+      if(!title && !editingId && !editingSharedId){
+        if(els.titleInput) els.titleInput.focus();
+        return;
+      }
       saveTask('high', false, { forceCommon: true });
     });
   }
