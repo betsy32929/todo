@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V52：共同備忘錄文字精簡；紹薇工作事項排序改小箭頭無底色 -->
+<!-- V58：麗卉首要、次重要、等待三欄皆可拖曳移動；行事曆預設進首要但手動拖曳後保留分類 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V52 共同備忘錄文字精簡</title>
+<title>麗卉待辦 V58 三欄可拖曳移動</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -1093,6 +1093,7 @@
       repeatEvery: Number(task.repeatEvery || task.repeatDay || 0) || 0,
       calendarOnly: !!task.calendarOnly,
       group: task.group || 'mid',
+      manualGroup: !!task.manualGroup,
       done: !!task.done,
       order: typeof task.order === 'number' ? task.order : (idx + 1),
       createdAt: task.createdAt || new Date().toISOString(),
@@ -1357,6 +1358,7 @@
       repeatEvery: 0,
       calendarOnly: false,
       group,
+      manualGroup: false,
       done: false,
       order: next,
       createdAt: new Date().toISOString(),
@@ -1577,7 +1579,7 @@
     };
     const payload = {
       title, assignee, dueDate, note, lihuiAssign,
-      repeatType, repeatEvery, calendarOnly: !!calendarOnlyMode, group: targetGroup, done: false,
+      repeatType, repeatEvery, calendarOnly: !!calendarOnlyMode, group: targetGroup, manualGroup: editingTask ? !!editingTask.manualGroup : false, done: false,
       occurrenceOriginalDate: dueDate || (editingTask && (editingTask.occurrenceOriginalDate || editingTask.dueDate) || ''), repeatEnabled: true, taskCategory
     };
 
@@ -1958,9 +1960,9 @@
       if(task.taskCategory === 'work') return 'mid';
       return 'high';
     }
-    // 麗卉：用「行事曆」新增的事項，提前一天出現在清單時一律歸在首要。
-    // 這裡也會修正舊資料原本被存成等待的情況。
-    if(task && task.calendarOnly && task.taskCategory !== 'work') return 'high';
+    // 麗卉：行事曆事項第一次提前一天進清單時預設在首要；
+    // 但使用者手動拖曳到首要／次重要／等待後，之後就依手動分類固定。
+    if(task && task.calendarOnly && task.taskCategory !== 'work' && !task.manualGroup) return 'high';
     return task.group || (source === 'shared' ? 'mid' : 'high');
   }
 
@@ -1969,7 +1971,7 @@
     let changed = false;
     [state.tasks, sharedState.tasks].forEach(list => {
       (list || []).forEach(t => {
-        if(t && t.calendarOnly && t.taskCategory !== 'work' && t.group !== 'high'){
+        if(t && t.calendarOnly && t.taskCategory !== 'work' && !t.manualGroup && t.group !== 'high'){
           t.group = 'high';
           changed = true;
         }
@@ -2067,6 +2069,7 @@
           const task = list.find(x => x.id === dragId);
           if(!task || task.taskCategory !== 'work') return;
           task.group = 'mid';
+          task.manualGroup = true;
           const ids = [...zone.querySelectorAll(`.task[data-source="${source}"][data-category="work"]`)].map(el => el.dataset.id).filter(Boolean);
 
           let newIds;
@@ -2136,6 +2139,7 @@
         const task = list.find(x => x.id === dragId);
         if(!task) return;
         task.group = targetGroup;
+        task.manualGroup = true;
         const ids = [...zone.querySelectorAll(`.task[data-source="${source}"]`)].map(el => el.dataset.id).filter(Boolean);
 
         let newIds;
