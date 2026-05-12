@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V58：麗卉首要、次重要、等待三欄皆可拖曳移動；行事曆預設進首要但手動拖曳後保留分類 -->
+<!-- V59：網址自動轉連結；任務標題/備註/彈窗可點，記事區新增連結預覽 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V58 三欄可拖曳移動</title>
+<title>麗卉待辦 V59 網址自動連結</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -373,6 +373,53 @@
     box-shadow:none !important;
   }
   .taskBtns .sortBtn:hover, .sortBtn:hover{color:#2f3440 !important;}
+
+
+  /* V59：網址自動轉成可點連結 */
+  .autoLink{
+    color:#2563eb;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    font-weight:900;
+    cursor:pointer;
+    word-break:break-all;
+  }
+  .autoLink:hover{
+    color:#1d4ed8;
+    background:#eef5ff;
+    border-radius:6px;
+  }
+  .memoLinkPreview{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:8px;
+    min-height:0;
+  }
+  .memoLinkPreview:empty{display:none;}
+  .memoLinkPreviewTitle{
+    font-size:12px;
+    font-weight:900;
+    color:#64748b;
+  }
+  .memoLinkItem{
+    display:inline-flex;
+    align-items:center;
+    max-width:100%;
+    padding:5px 10px;
+    border-radius:999px;
+    border:1px solid #cfe0ff;
+    background:#f2f7ff;
+    color:#2563eb;
+    font-size:12px;
+    font-weight:900;
+    text-decoration:none;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .memoLinkItem:hover{background:#e8f1ff;color:#1d4ed8;}
 
 </style>
 </head>
@@ -967,6 +1014,79 @@
   function fmtROC(dateStr){ if (!dateStr) return ''; const d = toDate(dateStr); return `${rocYear(d.getFullYear())}/${d.getMonth()+1}/${d.getDate()} ${weekMap[d.getDay()]}`; }
   function fmtClock(){ const d = new Date(); return `${rocYear(d.getFullYear())}/${d.getMonth()+1}/${d.getDate()} ${weekMap[d.getDay()]} ${pad(d.getHours())}點${pad(d.getMinutes())}分${pad(d.getSeconds())}秒`; }
   function escapeHtml(str=''){ return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+  function cleanUrlMatch(url){
+    let main = String(url || '');
+    let tail = '';
+    while(/[\)\]\},，。；;!?！？、]$/.test(main)){
+      tail = main.slice(-1) + tail;
+      main = main.slice(0, -1);
+    }
+    return { main, tail };
+  }
+  function extractUrls(text=''){
+    const raw = String(text || '');
+    const urlRe = /((?:https?:\/\/|www\.)[^\s<>"'，。；、\u3000]+)/gi;
+    const found = [];
+    raw.replace(urlRe, (match) => {
+      const cleaned = cleanUrlMatch(match).main;
+      if(cleaned && !found.includes(cleaned)) found.push(cleaned);
+      return match;
+    });
+    return found;
+  }
+  function hrefForUrl(url){ return /^https?:\/\//i.test(url) ? url : 'https://' + url; }
+  function linkifyText(text=''){
+    const raw = String(text || '');
+    const urlRe = /((?:https?:\/\/|www\.)[^\s<>"'，。；、\u3000]+)/gi;
+    let out = '';
+    let last = 0;
+    raw.replace(urlRe, (match, _full, offset) => {
+      out += escapeHtml(raw.slice(last, offset));
+      const { main, tail } = cleanUrlMatch(match);
+      if(main){
+        const href = hrefForUrl(main);
+        out += `<a class="autoLink" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" data-auto-link="1">${escapeHtml(main)}</a>${escapeHtml(tail)}`;
+      }else{
+        out += escapeHtml(match);
+      }
+      last = offset + match.length;
+      return match;
+    });
+    out += escapeHtml(raw.slice(last));
+    return out;
+  }
+  function bindAutoLinks(root=document){
+    root.querySelectorAll('a.autoLink').forEach(a => {
+      a.addEventListener('click', e => e.stopPropagation());
+      a.addEventListener('mousedown', e => e.stopPropagation());
+      a.addEventListener('dragstart', e => e.stopPropagation());
+    });
+  }
+  function ensureLinkPreview(textarea, previewId){
+    if(!textarea) return null;
+    let box = document.getElementById(previewId);
+    if(!box){
+      box = document.createElement('div');
+      box.id = previewId;
+      box.className = 'memoLinkPreview';
+      textarea.insertAdjacentElement('afterend', box);
+    }
+    return box;
+  }
+  function renderUrlPreview(textarea, previewId){
+    const box = ensureLinkPreview(textarea, previewId);
+    if(!box) return;
+    const urls = extractUrls(textarea.value || '');
+    box.innerHTML = urls.length
+      ? `<span class="memoLinkPreviewTitle">連結：</span>` + urls.map(url => `<a class="memoLinkItem" href="${escapeHtml(hrefForUrl(url))}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`).join('')
+      : '';
+  }
+  function renderAllLinkPreviews(){
+    renderUrlPreview(els.memoBox, 'memoLinkPreview');
+    renderUrlPreview(getHandoffMemoBox(), 'handoffLinkPreview');
+    renderUrlPreview(getProfileTodoNoteBox(), 'todoNoteLinkPreview');
+    renderUrlPreview(getSharedMemoBox(), 'sharedMemoLinkPreview');
+  }
   function getWeekStart(d){ const x = new Date(d); x.setHours(0,0,0,0); const day = x.getDay(); const diff = (day + 6) % 7; x.setDate(x.getDate() - diff); return x; }
   function orderVal(v){ return typeof v === 'number' ? v : 999999; }
   function saveStatus(text){ els.saveStatus.textContent = text; setTimeout(() => { els.saveStatus.textContent = '已自動記憶'; }, 1200); }
@@ -1792,7 +1912,7 @@
     else if(isShared) meta.push(`<span class="badge common">共同</span>`);
     if(isShared && task.sharedCompleteBy) meta.push(`<span class="autoTag">${escapeHtml(sharedCompletionMetaText(task))}</span>`);
     const noteClass = (isLihui() || (isShaowei() && task.taskCategory === 'work')) ? 'workNoteText' : 'noteText';
-    if(task.note) meta.push(`<span class="${noteClass}">${escapeHtml(task.note)}</span>`);
+    if(task.note) meta.push(`<span class="${noteClass}">${linkifyText(task.note)}</span>`);
     if(task.repeatType) meta.push(`<span class="repeatTag">${escapeHtml(repeatBadgeText(task))}</span>`);
     if(task.autoSpawnedFrom) meta.push(`<span class="autoTag">循環事件</span>`);
     const isShaoweiWork = isShaowei() && task.taskCategory === 'work';
@@ -1818,7 +1938,7 @@
         <div class="taskTop" style="grid-template-columns:${isShaoweiWork ? '34px 28px minmax(0,1fr) auto' : '24px 38px minmax(0,1fr) auto'};">
           ${firstCol}
           ${checkHtml}
-          <div class="taskTitle" data-act="open" data-id="${task.id}" data-source="${source}">${escapeHtml(task.title)}</div>
+          <div class="taskTitle" data-act="open" data-id="${task.id}" data-source="${source}">${linkifyText(task.title)}</div>
           <div class="taskBtns">
             <button class="miniBtn" data-act="edit-inline" data-id="${task.id}" data-source="${source}" type="button">編輯</button>
             <button class="miniBtn" data-act="delete" data-id="${task.id}" data-source="${source}" type="button">刪除</button>
@@ -1842,8 +1962,8 @@
       <div class="repeatItem" data-repeat-id="${task.id}" data-source="${source}">
         <div class="repeatTop">
           <div>
-            <div class="repeatTitle" data-act="repeat-open" data-id="${task.id}" data-source="${source}">${escapeHtml(task.title)}</div>
-            <div class="repeatMeta">${escapeHtml(meta.join(' ｜ '))}</div>
+            <div class="repeatTitle" data-act="repeat-open" data-id="${task.id}" data-source="${source}">${linkifyText(task.title)}</div>
+            <div class="repeatMeta">${linkifyText(meta.join(' ｜ '))}</div>
           </div>
           <div class="repeatBtns">
             <button class="softBtn ${task.repeatEnabled ? 'on' : ''}" data-act="repeat-toggle" data-id="${task.id}" data-source="${source}" type="button">${task.repeatEnabled ? '啟用中' : '已停用'}</button>
@@ -1855,6 +1975,7 @@
   }
 
   function bindTaskEvents(){
+    bindAutoLinks(document);
     document.querySelectorAll('[data-act="check"]').forEach(el => el.onclick = (e) => {
       e.stopPropagation();
       toggleDone(el.dataset.id, el.dataset.source || 'profile');
@@ -1903,6 +2024,7 @@
   }
 
   function bindRepeatEvents(){
+    bindAutoLinks(document);
     document.querySelectorAll('[data-act="repeat-open"]').forEach(el => el.onclick = () => {
       const source = el.dataset.source || 'profile';
       const t = getTaskBySource(source, el.dataset.id);
@@ -2295,11 +2417,12 @@
     const isDone = !!(instance && instance.done);
     els.recurringModal.dataset.masterId = masterId;
     els.recurringModal.dataset.occurrenceDate = occurrenceDate;
-    els.recurringModalText.innerHTML = `「${escapeHtml(displayTitle)}」<br>${escapeHtml(fmtROC(occurrenceDate))}<br>${isDone ? '本次已完成，可繼續編輯本次或整個重複任務。' : '這是重複任務。你要提前完成本次，還是只編輯這一次？'}`;
+    els.recurringModalText.innerHTML = `「${linkifyText(displayTitle)}」<br>${escapeHtml(fmtROC(occurrenceDate))}<br>${isDone ? '本次已完成，可繼續編輯本次或整個重複任務。' : '這是重複任務。你要提前完成本次，還是只編輯這一次？'}`;
     els.modalCompleteOccurrenceBtn.textContent = isDone ? '本次已完成' : '提前完成本次';
     els.modalCompleteOccurrenceBtn.disabled = isDone;
     els.modalCompleteOccurrenceBtn.style.opacity = isDone ? '.6' : '1';
     els.modalCompleteOccurrenceBtn.style.cursor = isDone ? 'not-allowed' : 'pointer';
+    bindAutoLinks(els.recurringModal);
     els.recurringModal.classList.add('show');
     els.recurringModal.setAttribute('aria-hidden','false');
   }
@@ -2350,14 +2473,14 @@
       allowComplete = currentCanReview;
       allowCompleteNext = false;
       const waitingLabel = handoffTask ? '麗卉閱' : '閱';
-      els.singleTaskModalText.innerHTML = `「${escapeHtml(task.title)}」${task.dueDate ? `<br>${escapeHtml(fmtROC(task.dueDate))}` : ''}<br>${currentCanReview ? `${doneByName}已完成，請點「${waitingLabel}」後才會真正完成隱藏。` : `你已完成這筆${handoffTask ? '麗卉交辦' : '共同事項'}，待 ${reviewerName} 點閱。`}`;
+      els.singleTaskModalText.innerHTML = `「${linkifyText(task.title)}」${task.dueDate ? `<br>${escapeHtml(fmtROC(task.dueDate))}` : ''}<br>${currentCanReview ? `${doneByName}已完成，請點「${waitingLabel}」後才會真正完成隱藏。` : `你已完成這筆${handoffTask ? '麗卉交辦' : '共同事項'}，待 ${reviewerName} 點閱。`}`;
       els.modalCompleteSingleTaskBtn.textContent = currentCanReview ? waitingLabel : '待閱';
     }else{
       let modalTip = task.done ? '這筆任務已完成，你可以繼續編輯內容。' : (allowCompleteNext ? '你要完成、完成並排下一次，還是編輯？' : (allowComplete ? '你要編輯這筆任務，還是直接完成？' : '這筆工作事項目前只提供編輯。'));
       if(handoffTask && !task.done && !task.sharedCompleteBy){
         modalTip = isShaowei() ? '這筆麗卉交辦由紹薇完成後，會等麗卉點閱才隱藏。' : '這筆麗卉交辦要等紹薇完成後，才會出現麗卉閱。';
       }
-      els.singleTaskModalText.innerHTML = `「${escapeHtml(task.title)}」${task.dueDate ? `<br>${escapeHtml(fmtROC(task.dueDate))}` : ''}<br>${modalTip}`;
+      els.singleTaskModalText.innerHTML = `「${linkifyText(task.title)}」${task.dueDate ? `<br>${escapeHtml(fmtROC(task.dueDate))}` : ''}<br>${modalTip}`;
       els.modalCompleteSingleTaskBtn.textContent = task.done ? '已完成' : '完成';
     }
     els.modalCompleteSingleTaskBtn.disabled = !!task.done || !allowComplete;
@@ -2368,6 +2491,7 @@
     els.modalCompleteNextSingleTaskBtn.style.opacity = els.modalCompleteNextSingleTaskBtn.disabled ? '.6' : '1';
     els.modalCompleteNextSingleTaskBtn.style.cursor = els.modalCompleteNextSingleTaskBtn.disabled ? 'not-allowed' : 'pointer';
     els.modalCompleteNextSingleTaskBtn.style.display = allowCompleteNext ? '' : 'none';
+    bindAutoLinks(els.singleTaskModal);
     els.singleTaskModal.classList.add('show');
     els.singleTaskModal.setAttribute('aria-hidden','false');
   }
@@ -2513,7 +2637,7 @@
   }
 
   function renderClock(){ els.clockBox.textContent = fmtClock(); }
-  function renderAll(){ ensureRecurringTasksForToday(); applyProfileUI(); renderRepeatList(); renderTags(); renderBoard(); renderCalendar(); renderClock(); }
+  function renderAll(){ ensureRecurringTasksForToday(); applyProfileUI(); renderRepeatList(); renderTags(); renderBoard(); renderCalendar(); renderClock(); renderAllLinkPreviews(); }
 
   function exportState(){
     const now = new Date();
@@ -2839,6 +2963,7 @@
       if(handoffMemoBox) handoffMemoBox.value = state.handoffMemo;
       const todoNoteBox = getProfileTodoNoteBox();
       if(todoNoteBox) todoNoteBox.value = state.todoNote;
+      renderAllLinkPreviews();
       saveAppStateLocally();
       lastRemoteUpdatedAt = remoteUpdatedAt || lastRemoteUpdatedAt;
       updateSupabaseStatus(syncEnabled ? '已連線（即時同步中）' : '已載入雲端');
@@ -2881,6 +3006,7 @@
       appState.shared = sharedState;
       const sharedMemoBox = getSharedMemoBox();
       if(sharedMemoBox) sharedMemoBox.value = sharedState.sharedMemo || '';
+      renderAllLinkPreviews();
       saveAppStateLocally();
       lastSharedRemoteUpdatedAt = remoteUpdatedAt || lastSharedRemoteUpdatedAt;
       return true;
@@ -2970,9 +3096,11 @@
 
   function loadMemo(){
     if(els.memoBox) els.memoBox.value = state.memo || '';
+    renderUrlPreview(els.memoBox, 'memoLinkPreview');
   }
   function saveMemo(){
     state.memo = els.memoBox ? (els.memoBox.value || '') : '';
+    renderUrlPreview(els.memoBox, 'memoLinkPreview');
     persist({ statusText: '記事已儲存' });
   }
 
@@ -2980,10 +3108,12 @@
     const box = getHandoffMemoBox();
     if(!box) return;
     box.value = state.handoffMemo || '';
+    renderUrlPreview(box, 'handoffLinkPreview');
   }
   function saveHandoffMemo(){
     const box = getHandoffMemoBox();
     state.handoffMemo = box ? (box.value || '') : '';
+    renderUrlPreview(box, 'handoffLinkPreview');
     persist({ statusText: '交接記事已儲存' });
   }
 
@@ -2991,10 +3121,12 @@
     const box = getProfileTodoNoteBox();
     if(!box) return;
     box.value = state.todoNote || '';
+    renderUrlPreview(box, 'todoNoteLinkPreview');
   }
   function saveTodoNote(){
     const box = getProfileTodoNoteBox();
     state.todoNote = box ? (box.value || '') : '';
+    renderUrlPreview(box, 'todoNoteLinkPreview');
     persist({ statusText: '備註欄已儲存' });
   }
 
@@ -3002,10 +3134,12 @@
     const box = getSharedMemoBox();
     if(!box) return;
     box.value = sharedState.sharedMemo || '';
+    renderUrlPreview(box, 'sharedMemoLinkPreview');
   }
   function saveSharedMemo(){
     const box = getSharedMemoBox();
     sharedState.sharedMemo = box ? (box.value || '') : '';
+    renderUrlPreview(box, 'sharedMemoLinkPreview');
     persistShared({ statusText: '共同備忘錄已儲存' });
   }
 
