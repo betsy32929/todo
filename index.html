@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V59：網址自動轉連結；任務標題/備註/彈窗可點，記事區新增連結預覽 -->
+<!-- V64：中1備註說明藍色顯示；麗卉待辦清單標題右側顯示已完成 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V59 網址自動連結</title>
+<title>麗卉待辦 V64 中1備註藍色</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -41,7 +41,7 @@
   .fieldErrorText{white-space:nowrap}
   .row1,.row2{display:grid;gap:10px;align-items:center}
   .row1{grid-template-columns:minmax(0,0.95fr) 320px 150px 118px 95px 95px 95px}
-  .row2{grid-template-columns:minmax(0,1.15fr) minmax(0,1.15fr) 110px 100px repeat(5,88px)}
+  .row2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 100px repeat(7,80px)}
   .btn{border:none;border-radius:14px;padding:11px 10px;font-size:14px;font-weight:900;cursor:pointer;white-space:nowrap}
   .btn-add{background:linear-gradient(180deg,#df7992,#cf647f);color:#fff;font-size:16px}
   .btn-clear{background:#f3f5f8;color:#667283;border:1px solid #dce2ea;box-shadow:0 1px 0 rgba(255,255,255,.9)}
@@ -281,7 +281,7 @@
   }
   @media (max-width:1250px){
     .row1{grid-template-columns:minmax(0,0.9fr) 260px 140px 110px 90px 90px 90px}
-    .row2{grid-template-columns:minmax(0,1.2fr) 100px 90px repeat(5,82px)}
+    .row2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 92px repeat(7,74px)}
     .weekGrid{grid-template-columns:repeat(4,1fr)}
   }
   @media (max-width:980px){
@@ -337,7 +337,7 @@
   .sortBtn{min-width:42px;background:#fff8e8;color:#8a5a14;border-color:#edd3a2}
   body[data-profile="shaowei"] .sortBtn{min-width:48px}
   @media (max-width:1250px){
-    .row2{grid-template-columns:minmax(0,1.1fr) minmax(0,1.1fr) 110px 100px repeat(5,82px)}
+    .row2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 92px repeat(7,74px)}
   }
   @media (max-width:980px){
     .memoDualGrid{grid-template-columns:1fr}
@@ -351,11 +351,33 @@
     .boardWrap{grid-template-columns:1fr 1fr 1fr !important;}
     .weekGrid{grid-template-columns:repeat(7,1fr) !important;}
     .row1{grid-template-columns:minmax(0,0.95fr) 320px 150px 118px 95px 95px 95px !important;}
-    .row2{grid-template-columns:minmax(0,1.15fr) minmax(0,1.15fr) 110px 100px repeat(5,88px) !important;}
+    .row2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 100px repeat(7,80px) !important;}
     .repeatTop{grid-template-columns:minmax(0,1fr) auto !important;}
     .supabaseTopRow{grid-template-columns:minmax(0,1.05fr) minmax(0,1.15fr) auto auto auto !important;}
     .shotBtn{height:52px !important;padding:0 16px !important;font-size:16px !important;}
   }
+
+
+
+
+  /* V63：待辦清單標題右側放「顯示已完成」 */
+  .taskListHead{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .headerDoneToggle{
+    margin-left:auto;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:30px;
+    padding:4px 11px;
+    border-radius:999px;
+    background:rgba(255,255,255,.68);
+    border:1px solid rgba(214,221,234,.9);
+    color:#5f6677;
+    font-size:14px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+  .headerDoneToggle input{width:17px;height:17px;cursor:pointer;accent-color:#cf647f;}
 
 
   /* V52：紹薇工作事項排序小箭頭，無底色、無框線 */
@@ -373,6 +395,59 @@
     box-shadow:none !important;
   }
   .taskBtns .sortBtn:hover, .sortBtn:hover{color:#2f3440 !important;}
+
+
+  /* V61：待辦輸入刪除鍵＋中1共用區塊 */
+  .deletePill{
+    background:#111827 !important;
+    color:#fff !important;
+    border-color:#111827 !important;
+    box-shadow:0 3px 8px rgba(17,24,39,.12);
+  }
+  .deletePill:hover{background:#000 !important;color:#fff !important;}
+  .midOnePill{background:#f3f0ff;color:#6d4fb3;border-color:#d8ccfb;}
+  .midOnePill.active{background:#ded3ff;border-color:#bfaef5;color:#533895;}
+  .midOneCard .cardHead{background:linear-gradient(90deg,#eef5ff,#f5efff)}
+  .midOneCard .cardBody{padding:8px 10px 10px;}
+  .midOneGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-height:0;}
+  .midOneGrid .task{margin-bottom:0;padding:8px 10px;border-radius:14px;}
+  .midOneGrid .taskTop{grid-template-columns:1fr auto !important;gap:8px;}
+  .midOneGrid .taskTitle{font-size:14px;line-height:1.45;}
+  .midOneGrid .taskMeta{margin-left:0 !important;font-size:12px;line-height:1.45;margin-top:4px;}
+  .midOneGrid .taskBtns{gap:5px;}
+  .midOneGrid .miniBtn{padding:4px 7px;font-size:12px;}
+  .midOneGrid .empty{grid-column:1/-1;min-height:48px;}
+
+  /* V64：中1備註說明改藍色 */
+  .midOneGrid .taskMeta .noteText{
+    color:#2563eb !important;
+    font-weight:900;
+  }
+  .midOneGrid .taskMeta .noteText .autoLink{
+    color:#1d4ed8;
+  }
+  @media (max-width:980px){
+    .midOneGrid{grid-template-columns:1fr 1fr;}
+  }
+
+
+  /* V62：麗卉模式操作按鈕固定同一排 */
+  body[data-profile="lihui"] .row2{
+    grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 100px repeat(7,80px);
+    gap:8px;
+  }
+  body[data-profile="lihui"] .row2 .btn,
+  body[data-profile="lihui"] .row2 .togglePill{
+    padding-left:5px;
+    padding-right:5px;
+    font-size:13px;
+    min-width:0;
+  }
+  @media (max-width:1250px){
+    body[data-profile="lihui"] .row2{
+      grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 92px repeat(7,74px);
+    }
+  }
 
 
   /* V59：網址自動轉成可點連結 */
@@ -533,6 +608,7 @@
           <option value="">不重複</option>
           <option value="weekly">每週</option>
           <option value="monthly">每月</option>
+          <option value="yearly">每年</option>
           <option value="every_x_days">幾天</option>
         </select>
         <input id="repeatEveryInput" class="input" type="number" min="1" placeholder="幾天">
@@ -542,15 +618,33 @@
         <button id="addCalendarBtn" class="btn" type="button" style="background:#edf8ef;color:#2f7a4b;border:1px solid #cfe7d6;">行事曆</button>
         <button id="lihuiAssignBtn" class="togglePill hiddenByMode" type="button" aria-pressed="false">麗卉交辦</button>
         <button id="commonTaskBtn" class="togglePill" type="button" aria-pressed="false">共同</button>
+        <button id="midOneTaskBtn" class="togglePill midOnePill" type="button" aria-pressed="false">中1</button>
         <button id="workTaskBtn" class="togglePill work hiddenByMode" type="button" aria-pressed="false">工作事項</button>
+        <button id="deleteEditingBtn" class="togglePill deletePill" type="button">刪除</button>
       </div>
       <input id="importFile" type="file" accept="application/json" style="display:none;">
     </div>
   </section>
 
+  <section class="card midOneCard" id="midOneCard">
+    <div class="cardHead compact1cm">
+      <span>中1</span>
+      <span class="statusText">由上方待辦輸入新增／編輯／刪除｜麗卉／紹薇共用</span>
+    </div>
+    <div class="cardBody">
+      <div id="midOneGrid" class="midOneGrid"></div>
+    </div>
+  </section>
+
 
 <section class="card taskListCard">
-    <div class="cardHead compact1cm"><span>待辦清單</span><span class="statusText" id="taskListStatusText">自動分類｜完成可隱藏</span></div>
+    <div class="cardHead compact1cm taskListHead">
+      <span>待辦清單</span>
+      <label class="doneToggle headerDoneToggle">
+        <input type="checkbox" id="toggleDone">
+        顯示已完成
+      </label>
+    </div>
     <div class="cardBody">
       <div class="chipRow" id="assigneeTags" style="margin-bottom:12px;"></div>
       <div id="simpleStats" class="simpleStats" style="display:none;"></div>
@@ -573,12 +667,6 @@
           <div class="colHead"><span>待辦清單</span><span class="count" id="countSimple">0</span></div>
           <div class="dropZone" id="zoneSimple"></div>
         </div>
-      </div>
-      <div class="bottomBar">
-        <label class="doneToggle">
-          <input type="checkbox" id="toggleDone">
-          顯示已完成
-        </label>
       </div>
       <div id="todoNoteWrap" style="margin-top:14px;">
         <div style="font-size:15px;font-weight:900;margin-bottom:8px;">備註欄</div>
@@ -689,7 +777,13 @@
     calendarStatus: document.getElementById('calendarStatus'),
     lihuiAssignBtn: document.getElementById('lihuiAssignBtn'),
     commonTaskBtn: document.getElementById('commonTaskBtn'),
+    midOneTaskBtn: document.getElementById('midOneTaskBtn'),
+    deleteEditingBtn: document.getElementById('deleteEditingBtn'),
     workTaskBtn: document.getElementById('workTaskBtn'),
+    midOneInput: document.getElementById('midOneInput'),
+    midOneSaveBtn: document.getElementById('midOneSaveBtn'),
+    midOneClearBtn: document.getElementById('midOneClearBtn'),
+    midOneGrid: document.getElementById('midOneGrid'),
     switchLihui: document.getElementById('switchLihui'),
     switchShaowei: document.getElementById('switchShaowei'),
     zoneHigh: document.getElementById('zoneHigh'),
@@ -759,13 +853,14 @@
   let lastSelectedDate = '';
   let sharedState = { tasks: [] };
   let editingSharedId = '';
+  let editingMidOneId = '';
   let lastSharedRemoteUpdatedAt = '';
   let lastSupabaseErrorDetail = '';
   let mainDatePicker = null;
 
 
   function blankProfileState(){ return { tasks: [], memo: '', handoffMemo: '', todoNote: '' }; }
-  function blankSharedState(){ return { tasks: [], sharedMemo: '' }; }
+  function blankSharedState(){ return { tasks: [], sharedMemo: '', midOneItems: [] }; }
   function currentProfileName(){ return PROFILE_LABELS[currentProfile] || PROFILE_LABELS[DEFAULT_PROFILE]; }
   function profileLabel(key){ return PROFILE_LABELS[key] || ''; }
   function otherProfile(key){ return key === 'shaowei' ? 'lihui' : 'shaowei'; }
@@ -796,6 +891,13 @@
     els.commonTaskBtn.dataset.active = active ? '1' : '0';
     els.commonTaskBtn.classList.toggle('active', !!active);
     els.commonTaskBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  }
+  function isMidOneFormActive(){ return !!(els.midOneTaskBtn && els.midOneTaskBtn.dataset.active === '1'); }
+  function setMidOneFormActive(active){
+    if(!els.midOneTaskBtn) return;
+    els.midOneTaskBtn.dataset.active = active ? '1' : '0';
+    els.midOneTaskBtn.classList.toggle('active', !!active);
+    els.midOneTaskBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
   }
   function getTaskBySource(source, id){
     const list = source === 'shared' ? sharedState.tasks : state.tasks;
@@ -844,6 +946,7 @@
     const base = blankSharedState();
     if(data && Array.isArray(data.tasks)) base.tasks = repairRecurringTaskDates(data.tasks.map(normalizeLegacyTask).filter(t => t.title));
     base.sharedMemo = String(data && (data.sharedMemo ?? data.memo ?? '') || '');
+    base.midOneItems = Array.isArray(data && data.midOneItems) ? data.midOneItems.map(normalizeMidOneItem).filter(item => item.text) : [];
     return base;
   }
   function bindStateFromProfile(){
@@ -929,7 +1032,6 @@
     if(els.switchShaowei) els.switchShaowei.classList.toggle('active', currentProfile === 'shaowei');
     if(els.profileModeText) els.profileModeText.textContent = isShaowei() ? '紹薇模式' : '麗卉模式';
     if(els.taskInputTitle) els.taskInputTitle.textContent = isShaowei() ? '紹薇待辦輸入' : '待辦輸入';
-    if(els.taskListStatusText) els.taskListStatusText.textContent = isShaowei() ? '依日期排序｜完成可隱藏' : '拖曳排序｜可篩選人員｜完成可隱藏';
     if(els.memoMainTitle) els.memoMainTitle.textContent = '記事';
     if(els.handoffMemoTitle) els.handoffMemoTitle.textContent = isShaowei() ? '麗卉交接' : '紹薇交接';
     if(els.memoBox) els.memoBox.placeholder = '這裡可以自由記事，會自動記憶';
@@ -972,6 +1074,11 @@
       const active = els.commonTaskBtn.dataset.active === '1';
       els.commonTaskBtn.classList.toggle('active', active);
       els.commonTaskBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+    if(els.midOneTaskBtn){
+      const active = els.midOneTaskBtn.dataset.active === '1';
+      els.midOneTaskBtn.classList.toggle('active', active);
+      els.midOneTaskBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
   }
   async function switchProfile(profileKey){
@@ -1265,6 +1372,7 @@
     if(!task.repeatType) return '';
     if(task.repeatType === 'weekly') return '每週';
     if(task.repeatType === 'monthly') return '每月';
+    if(task.repeatType === 'yearly') return '每年';
     if(task.repeatType === 'every_x_days') return task.repeatEvery ? `每${task.repeatEvery}天` : '幾天';
     return '';
   }
@@ -1284,6 +1392,11 @@
     if(task.repeatType === 'monthly'){
       const next = new Date(base);
       next.setMonth(next.getMonth() + 1);
+      return dateKey(next);
+    }
+    if(task.repeatType === 'yearly'){
+      const next = new Date(base);
+      next.setFullYear(next.getFullYear() + 1);
       return dateKey(next);
     }
     if(task.repeatType === 'every_x_days' && Number(task.repeatEvery) > 0){
@@ -1420,6 +1533,8 @@
       return diff % 7 === 0;
     }else if(task.repeatType === 'monthly'){
       return base.getDate() === target.getDate();
+    }else if(task.repeatType === 'yearly'){
+      return base.getMonth() === target.getMonth() && base.getDate() === target.getDate();
     }else if(task.repeatType === 'every_x_days' && task.repeatEvery > 0){
       const diff = Math.floor((target - base)/86400000);
       return diff >= 0 && diff % task.repeatEvery === 0;
@@ -1450,6 +1565,17 @@
       while(true){
         const next = new Date(candidate);
         next.setMonth(next.getMonth() + 1);
+        if(next > target) break;
+        candidate = next;
+      }
+      return dateKey(candidate);
+    }
+
+    if(task.repeatType === 'yearly'){
+      let candidate = new Date(base);
+      while(true){
+        const next = new Date(candidate);
+        next.setFullYear(next.getFullYear() + 1);
         if(next > target) break;
         candidate = next;
       }
@@ -1584,6 +1710,7 @@
   function clearForm(){
     editingId = '';
     editingSharedId = '';
+    editingMidOneId = '';
     setOccurrenceEditMode(null);
     els.titleInput.value = '';
     if(els.assigneeInput) els.assigneeInput.value = '';
@@ -1602,6 +1729,7 @@
       els.workTaskBtn.setAttribute('aria-pressed','false');
     }
     setCommonFormActive(false);
+    setMidOneFormActive(false);
     els.repeatTypeInput.value = '';
     els.repeatEveryInput.value = '';
     els.saveBtn.textContent = '新增';
@@ -1633,6 +1761,7 @@
       els.workTaskBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
     setCommonFormActive(source === 'shared');
+    setMidOneFormActive(false);
     els.repeatTypeInput.value = task.repeatType || '';
     els.repeatEveryInput.value = task.repeatEvery || '';
     if(!occurrenceEditContext) els.saveBtn.textContent = '更新';
@@ -1648,6 +1777,10 @@
   function saveTask(group, calendarOnlyMode = null, extra = {}){
     const title = els.titleInput.value.trim();
     if(!title){ alert('請先輸入事項'); els.titleInput.focus(); return; }
+    if(!occurrenceEditContext && (editingMidOneId || extra.forceMidOne || isMidOneFormActive())){
+      saveMidOneItemFromForm();
+      return;
+    }
     const rawDate = String(els.dateInput.value || '').trim();
     const sourceSource = editingSharedId ? 'shared' : (editingId ? 'profile' : '');
     const editingTask = sourceSource ? getTaskBySource(sourceSource, editingId || editingSharedId) : null;
@@ -2599,6 +2732,183 @@
 
 
 
+
+
+  function normalizeMidOneItem(item, idx = 0){
+    if(typeof item === 'string'){
+      const text = item.trim();
+      return { id: uid(), text, title: text, dueDate: '', assignee: '', note: '', createdAt: new Date().toISOString(), order: idx + 1, done: false };
+    }
+    const text = String(item && (item.text ?? item.title ?? item.content) || '').trim();
+    return {
+      id: item && item.id ? String(item.id) : uid(),
+      text,
+      title: text,
+      dueDate: String(item && item.dueDate || ''),
+      assignee: String(item && item.assignee || ''),
+      note: String(item && item.note || ''),
+      createdAt: item && item.createdAt ? String(item.createdAt) : new Date().toISOString(),
+      order: typeof (item && item.order) === 'number' ? item.order : idx + 1,
+      done: !!(item && item.done)
+    };
+  }
+
+  function clearMidOneForm(){
+    editingMidOneId = '';
+    setMidOneFormActive(false);
+    if(els.saveBtn) els.saveBtn.textContent = '新增';
+  }
+
+  function saveMidOneItemFromForm(){
+    const text = (els.titleInput && els.titleInput.value || '').trim();
+    if(!text){
+      if(els.titleInput) els.titleInput.focus();
+      return;
+    }
+    const rawDate = String(els.dateInput && els.dateInput.value || '').trim();
+    let dueDate = '';
+    if(rawDate){
+      dueDate = validateDateInput();
+      if(!dueDate){
+        if(els.dateInput) els.dateInput.focus();
+        return;
+      }
+    }
+    const payload = {
+      text, title: text, dueDate,
+      assignee: els.assigneeInput ? els.assigneeInput.value.trim().replace(/^@/,'') : '',
+      note: els.noteInput ? els.noteInput.value.trim() : '',
+      done: false
+    };
+    if(!Array.isArray(sharedState.midOneItems)) sharedState.midOneItems = [];
+    if(editingMidOneId){
+      const item = sharedState.midOneItems.find(x => x.id === editingMidOneId);
+      if(item) Object.assign(item, payload);
+    }else{
+      const orders = sharedState.midOneItems.map(x => orderVal(x.order));
+      sharedState.midOneItems.push(Object.assign({
+        id: uid(),
+        createdAt: new Date().toISOString(),
+        order: orders.length ? Math.max(...orders) + 1 : 1
+      }, payload));
+    }
+    clearForm();
+    persistShared({ statusText: '中1已儲存' });
+    renderMidOne();
+  }
+
+  function populateMidOneForm(item){
+    if(!item) return;
+    editingId = '';
+    editingSharedId = '';
+    editingMidOneId = item.id;
+    setOccurrenceEditMode(null);
+    if(els.titleInput) els.titleInput.value = item.text || item.title || '';
+    if(els.assigneeInput) els.assigneeInput.value = item.assignee ? '@' + item.assignee : '';
+    if(els.dateInput) els.dateInput.value = item.dueDate || '';
+    lastSelectedDate = item.dueDate || '';
+    if(els.noteInput) els.noteInput.value = item.note || '';
+    if(els.lihuiAssignBtn){
+      els.lihuiAssignBtn.dataset.active = '0';
+      els.lihuiAssignBtn.classList.remove('active');
+      els.lihuiAssignBtn.setAttribute('aria-pressed','false');
+    }
+    if(els.workTaskBtn){
+      els.workTaskBtn.dataset.active = '0';
+      els.workTaskBtn.classList.remove('active');
+      els.workTaskBtn.setAttribute('aria-pressed','false');
+    }
+    setCommonFormActive(false);
+    setMidOneFormActive(true);
+    if(els.repeatTypeInput) els.repeatTypeInput.value = '';
+    if(els.repeatEveryInput) els.repeatEveryInput.value = '';
+    if(els.saveBtn) els.saveBtn.textContent = '更新';
+    const inputSection = document.getElementById('taskInputSection');
+    if(inputSection) inputSection.scrollIntoView({behavior:'smooth', block:'start'});
+    setTimeout(() => { if(els.titleInput) els.titleInput.focus(); }, 200);
+  }
+
+  function editMidOneItem(id){
+    const item = (sharedState.midOneItems || []).find(x => x.id === id);
+    populateMidOneForm(item);
+  }
+
+  function deleteMidOneItem(id){
+    const item = (sharedState.midOneItems || []).find(x => x.id === id);
+    if(!item) return;
+    if(!confirm(`確定刪除中1「${item.text || item.title}」？`)) return;
+    sharedState.midOneItems = (sharedState.midOneItems || []).filter(x => x.id !== id);
+    if(editingMidOneId === id) clearForm();
+    persistShared({ statusText: '中1已刪除' });
+    renderMidOne();
+  }
+
+  function midOneItemHtml(item){
+    const meta = [];
+    if(item.dueDate){
+      const dueText = `<span class="${item.dueDate < todayStr() && !item.done ? 'danger' : ''}">${escapeHtml(fmtROC(item.dueDate))}${item.dueDate < todayStr() && !item.done ? '｜已過期' : ''}</span>`;
+      meta.push(dueText);
+    }
+    if(item.assignee) meta.push(escapeHtml('@' + item.assignee));
+    if(item.note) meta.push(`<span class="noteText">${linkifyText(item.note)}</span>`);
+    return `
+      <div class="task midOneTask" data-mid-one-id="${escapeHtml(item.id)}">
+        <div class="taskTop">
+          <div class="taskTitle" data-act="mid-one-edit" data-id="${escapeHtml(item.id)}">${linkifyText(item.text || item.title || '')}</div>
+          <div class="taskBtns">
+            <button class="miniBtn" data-act="mid-one-edit" data-id="${escapeHtml(item.id)}" type="button">編輯</button>
+            <button class="miniBtn" data-act="mid-one-delete" data-id="${escapeHtml(item.id)}" type="button">刪除</button>
+          </div>
+        </div>
+        ${meta.length ? `<div class="taskMeta">${meta.join(' ｜ ')}</div>` : ''}
+      </div>`;
+  }
+
+  function bindMidOneEvents(){
+    bindAutoLinks(document);
+    document.querySelectorAll('[data-act="mid-one-edit"]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        editMidOneItem(btn.dataset.id || '');
+      };
+    });
+    document.querySelectorAll('[data-act="mid-one-delete"]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        deleteMidOneItem(btn.dataset.id || '');
+      };
+    });
+  }
+
+  function renderMidOne(){
+    if(!els.midOneGrid) return;
+    if(!Array.isArray(sharedState.midOneItems)) sharedState.midOneItems = [];
+    sharedState.midOneItems = sharedState.midOneItems.map(normalizeMidOneItem).filter(item => item.text);
+    const items = sharedState.midOneItems.slice().sort((a,b) => orderVal(a.order) - orderVal(b.order) || (a.createdAt || '').localeCompare(b.createdAt || ''));
+    els.midOneGrid.innerHTML = items.length ? items.map(midOneItemHtml).join('') : '<div class="empty">目前沒有中1項目</div>';
+    bindMidOneEvents();
+  }
+
+  function deleteEditingTaskFromForm(){
+    if(editingMidOneId){
+      deleteMidOneItem(editingMidOneId);
+      return;
+    }
+    const source = editingSharedId ? 'shared' : (editingId ? 'profile' : '');
+    const id = editingSharedId || editingId;
+    if(source && id){
+      deleteTask(id, source);
+      return;
+    }
+    const hasInput = [els.titleInput, els.assigneeInput, els.dateInput, els.noteInput].some(el => el && String(el.value || '').trim());
+    if(hasInput){
+      if(confirm('目前沒有正在編輯的待辦，要清空輸入內容嗎？')) clearForm();
+      return;
+    }
+    if(els.titleInput) els.titleInput.focus();
+  }
+
+
   function renderCalendar(){
     if(!els.weekGrid) return;
     els.weekGrid.innerHTML = '';
@@ -2637,12 +2947,12 @@
   }
 
   function renderClock(){ els.clockBox.textContent = fmtClock(); }
-  function renderAll(){ ensureRecurringTasksForToday(); applyProfileUI(); renderRepeatList(); renderTags(); renderBoard(); renderCalendar(); renderClock(); renderAllLinkPreviews(); }
+  function renderAll(){ ensureRecurringTasksForToday(); applyProfileUI(); renderRepeatList(); renderTags(); renderBoard(); renderMidOne(); renderCalendar(); renderClock(); renderAllLinkPreviews(); }
 
   function exportState(){
     const now = new Date();
     const fileName = `${currentProfileName()}待辦備份_${rocYear(now.getFullYear())}年${now.getMonth()+1}月${now.getDate()}日_${now.getHours()}點${pad(now.getMinutes())}分.json`;
-    const blob = new Blob([JSON.stringify({tasks: state.tasks, sharedMemo: sharedState.sharedMemo || ''}, null, 2)], {type:'application/json'});
+    const blob = new Blob([JSON.stringify({tasks: state.tasks, sharedMemo: sharedState.sharedMemo || '', midOneItems: sharedState.midOneItems || []}, null, 2)], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = fileName;
@@ -2662,6 +2972,10 @@
         if(typeof data.sharedMemo === 'string'){
           sharedState.sharedMemo = data.sharedMemo;
           loadSharedMemo();
+        }
+        if(Array.isArray(data.midOneItems)){
+          sharedState.midOneItems = data.midOneItems.map(normalizeMidOneItem).filter(item => item.text);
+          renderMidOne();
         }
         ensureRecurringTasksForToday();
         persist();
@@ -2893,7 +3207,7 @@
     const sharedMemoBox = getSharedMemoBox();
     const payload = {
       app_name: getSharedRemoteAppName(),
-      state_json: { tasks: sharedState.tasks || [], sharedMemo: sharedMemoBox ? (sharedMemoBox.value || '') : (sharedState.sharedMemo || '') },
+      state_json: { tasks: sharedState.tasks || [], sharedMemo: sharedMemoBox ? (sharedMemoBox.value || '') : (sharedState.sharedMemo || ''), midOneItems: sharedState.midOneItems || [] },
       memo_text: sharedMemoBox ? (sharedMemoBox.value || '') : (sharedState.sharedMemo || ''),
       todo_note_text: '',
       updated_at: new Date().toISOString()
@@ -3003,6 +3317,7 @@
         : [];
       sharedState.tasks = remoteTasks;
       sharedState.sharedMemo = String(row.state_json && (row.state_json.sharedMemo ?? row.state_json.memo) || row.memo_text || '');
+      sharedState.midOneItems = Array.isArray(row.state_json && row.state_json.midOneItems) ? row.state_json.midOneItems.map(normalizeMidOneItem).filter(item => item.text) : [];
       appState.shared = sharedState;
       const sharedMemoBox = getSharedMemoBox();
       if(sharedMemoBox) sharedMemoBox.value = sharedState.sharedMemo || '';
@@ -3191,6 +3506,29 @@
   els.addWaitBtn.addEventListener('click', () => saveTask('wait', false));
   if(els.addCalendarBtn) els.addCalendarBtn.addEventListener('click', addCalendarTaskNow);
   els.clearBtn.addEventListener('click', clearForm);
+  if(els.deleteEditingBtn) els.deleteEditingBtn.addEventListener('click', deleteEditingTaskFromForm);
+  if(els.midOneTaskBtn){
+    els.midOneTaskBtn.addEventListener('click', () => {
+      const title = (els.titleInput && els.titleInput.value || '').trim();
+      if(els.lihuiAssignBtn){
+        els.lihuiAssignBtn.dataset.active = '0';
+        els.lihuiAssignBtn.classList.remove('active');
+        els.lihuiAssignBtn.setAttribute('aria-pressed', 'false');
+      }
+      if(els.workTaskBtn){
+        els.workTaskBtn.dataset.active = '0';
+        els.workTaskBtn.classList.remove('active');
+        els.workTaskBtn.setAttribute('aria-pressed', 'false');
+      }
+      setCommonFormActive(false);
+      setMidOneFormActive(true);
+      if(!title && !editingMidOneId){
+        if(els.titleInput) els.titleInput.focus();
+        return;
+      }
+      saveMidOneItemFromForm();
+    });
+  }
   els.exportBtn.addEventListener('click', exportState);
   els.importBtn.addEventListener('click', () => els.importFile.click());
   els.importFile.addEventListener('change', e => {
@@ -3215,6 +3553,7 @@
         els.lihuiAssignBtn.setAttribute('aria-pressed', 'true');
       }
       setCommonFormActive(false);
+      setMidOneFormActive(false);
       saveTask('high', false);
     });
   }
@@ -3231,6 +3570,7 @@
         els.workTaskBtn.classList.remove('active');
         els.workTaskBtn.setAttribute('aria-pressed', 'false');
       }
+      setMidOneFormActive(false);
       setCommonFormActive(true);
       if(!title && !editingId && !editingSharedId){
         if(els.titleInput) els.titleInput.focus();
@@ -3253,6 +3593,7 @@
         els.lihuiAssignBtn.setAttribute('aria-pressed', 'false');
       }
       setCommonFormActive(false);
+      setMidOneFormActive(false);
       els.workTaskBtn.dataset.active = '1';
       els.workTaskBtn.classList.add('active');
       els.workTaskBtn.setAttribute('aria-pressed', 'true');
