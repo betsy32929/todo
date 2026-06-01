@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- V68：紹薇模式按鈕固定同一排；過期日期照日期由舊到新排序；中1備註說明藍色顯示 -->
+<!-- V69：中1可勾選完成；紹薇模式按鈕固定同一排；過期日期照日期由舊到新排序 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -412,7 +412,8 @@
   .midOneCard .cardBody{padding:8px 10px 10px;}
   .midOneGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-height:0;}
   .midOneGrid .task{margin-bottom:0;padding:8px 10px;border-radius:14px;}
-  .midOneGrid .taskTop{grid-template-columns:1fr auto !important;gap:8px;}
+  .midOneGrid .taskTop{grid-template-columns:24px minmax(0,1fr) auto !important;gap:8px;align-items:start;}
+  .midOneGrid .taskCheck{width:20px;height:20px;margin-top:1px;accent-color:#6d4fb3;}
   .midOneGrid .taskTitle{font-size:14px;line-height:1.45;}
   .midOneGrid .taskMeta{margin-left:0 !important;font-size:12px;line-height:1.45;margin-top:4px;}
   .midOneGrid .taskBtns{gap:5px;}
@@ -661,7 +662,7 @@
   <section class="card midOneCard" id="midOneCard">
     <div class="cardHead compact1cm">
       <span>中1</span>
-      <span class="statusText">由上方待辦輸入新增／編輯／刪除｜麗卉／紹薇共用</span>
+      <span class="statusText"></span>
     </div>
     <div class="cardBody">
       <div id="midOneGrid" class="midOneGrid"></div>
@@ -2944,6 +2945,15 @@
     renderMidOne();
   }
 
+  function toggleMidOneDone(id, done){
+    const item = (sharedState.midOneItems || []).find(x => x.id === id);
+    if(!item) return;
+    item.done = !!done;
+    if(editingMidOneId === id) clearForm();
+    persistShared({ statusText: item.done ? '中1已勾選完成' : '中1已恢復未完成' });
+    renderMidOne();
+  }
+
   function midOneItemHtml(item){
     const meta = [];
     if(item.dueDate){
@@ -2953,8 +2963,9 @@
     if(item.assignee) meta.push(escapeHtml('@' + item.assignee));
     if(item.note) meta.push(`<span class="noteText">${linkifyText(item.note)}</span>`);
     return `
-      <div class="task midOneTask" data-mid-one-id="${escapeHtml(item.id)}">
+      <div class="task midOneTask ${item.done ? 'done' : ''}" data-mid-one-id="${escapeHtml(item.id)}">
         <div class="taskTop">
+          <input class="taskCheck" data-act="mid-one-done" data-id="${escapeHtml(item.id)}" type="checkbox" ${item.done ? 'checked' : ''} title="勾選完成">
           <div class="taskTitle" data-act="mid-one-edit" data-id="${escapeHtml(item.id)}">${linkifyText(item.text || item.title || '')}</div>
           <div class="taskBtns">
             <button class="miniBtn" data-act="mid-one-edit" data-id="${escapeHtml(item.id)}" type="button">編輯</button>
@@ -2967,6 +2978,13 @@
 
   function bindMidOneEvents(){
     bindAutoLinks(document);
+    document.querySelectorAll('[data-act="mid-one-done"]').forEach(input => {
+      input.onchange = (e) => {
+        e.stopPropagation();
+        toggleMidOneDone(input.dataset.id || '', input.checked);
+      };
+      input.onclick = (e) => e.stopPropagation();
+    });
     document.querySelectorAll('[data-act="mid-one-edit"]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
@@ -2985,7 +3003,10 @@
     if(!els.midOneGrid) return;
     if(!Array.isArray(sharedState.midOneItems)) sharedState.midOneItems = [];
     sharedState.midOneItems = sharedState.midOneItems.map(normalizeMidOneItem).filter(item => item.text);
-    const items = sharedState.midOneItems.slice().sort((a,b) => orderVal(a.order) - orderVal(b.order) || (a.createdAt || '').localeCompare(b.createdAt || ''));
+    const items = sharedState.midOneItems
+      .filter(item => showDone || !item.done)
+      .slice()
+      .sort((a,b) => orderVal(a.order) - orderVal(b.order) || (a.createdAt || '').localeCompare(b.createdAt || ''));
     els.midOneGrid.innerHTML = items.length ? items.map(midOneItemHtml).join('') : '<div class="empty">目前沒有中1項目</div>';
     bindMidOneEvents();
   }
