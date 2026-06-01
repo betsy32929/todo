@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V64：中1備註說明藍色顯示；麗卉待辦清單標題右側顯示已完成 -->
+<!-- V67：過期日期照日期由舊到新排序；中1備註說明藍色顯示 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V64 中1備註藍色</title>
+<title>麗卉待辦 V67 過期日期排序</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -2480,6 +2480,23 @@
     });
   }
 
+  function taskDueSortTime(task){
+    const raw = task && (task.dueDate || task.date || task.occurrenceOriginalDate) ? String(task.dueDate || task.date || task.occurrenceOriginalDate) : '';
+    if(!raw) return Number.POSITIVE_INFINITY;
+    const d = toDate(raw);
+    const time = d && !Number.isNaN(d.getTime()) ? d.getTime() : Number.POSITIVE_INFINITY;
+    return time;
+  }
+
+  function compareDueDateFirst(a, b){
+    // 日期排序固定由舊到新：過期日期也要依序排在前面。
+    // 例如：4/28 → 5/2 → 5/10 → 5/31 → 6/10；沒有日期的排最後。
+    const at = taskDueSortTime(a);
+    const bt = taskDueSortTime(b);
+    if(at !== bt) return at - bt;
+    return 0;
+  }
+
   function compareVisibleTasksForBoard(a, b){
     if(isShaowei()){
       const aWork = a.taskCategory === 'work';
@@ -2489,18 +2506,17 @@
         if(starDiff) return starDiff;
         return orderVal(a.order) - orderVal(b.order) || (a.createdAt || '').localeCompare(b.createdAt || '');
       }
-      const aNoDate = a.dueDate ? 1 : 0;
-      const bNoDate = b.dueDate ? 1 : 0;
-      if(aNoDate !== bNoDate) return aNoDate - bNoDate;
+      const dateDiff = compareDueDateFirst(a, b);
+      if(dateDiff) return dateDiff;
       const aShared = a._source === 'shared' ? 0 : 1;
       const bShared = b._source === 'shared' ? 0 : 1;
       if(aShared !== bShared) return aShared - bShared;
       const starDiff = Number(!!b.isStarred) - Number(!!a.isStarred);
       if(starDiff) return starDiff;
-      const ad = a.dueDate || '9999-12-31';
-      const bd = b.dueDate || '9999-12-31';
-      return ad.localeCompare(bd) || orderVal(a.order) - orderVal(b.order);
+      return orderVal(a.order) - orderVal(b.order) || (a.createdAt || '').localeCompare(b.createdAt || '');
     }
+    const dateDiff = compareDueDateFirst(a, b);
+    if(dateDiff) return dateDiff;
     return (Number(!!b.isStarred)-Number(!!a.isStarred)) || (orderVal(a.order) - orderVal(b.order)) || (a._source === 'shared' ? 1 : -1);
   }
 
