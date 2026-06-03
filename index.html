@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V73：麗卉TODO待辦從啟用日期一路補到今天；日期可新增/更改/刪除；麗卉取消完成後詢問下次日期；紹薇維持原功能 -->
+<!-- V74：麗卉TODO待辦改為單筆輪替；完成目前日期後才產生下一個日期；日期可新增/更改/刪除；紹薇維持原功能 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V73 TODO啟用日起補到今天</title>
+<title>麗卉待辦 V74 TODO單筆輪替</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -359,7 +359,7 @@
 
 
 
-  /* V73：麗卉 TODO待辦日期設定＋啟用日期，從啟用日起補到今天，放在重複任務設定內，不新增大區塊 */
+  /* V74：麗卉 TODO待辦日期設定＋啟用日期，改為單筆輪替，放在重複任務設定內，不新增大區塊 */
   .todoSchedulePanel{
     border:1px solid #ead9e2;
     background:linear-gradient(180deg,#fffafd,#ffffff);
@@ -1000,7 +1000,7 @@
   function setTodoScheduleMessage(text = '', isError = false){
     const el = document.getElementById('todoScheduleMsg');
     if(!el) return;
-    el.textContent = text || '新增後會自動記憶，只影響之後產生的 TODO';
+    el.textContent = text || '新增後會自動記憶，TODO只會顯示目前輪到的一筆';
     el.classList.toggle('error', !!isError);
   }
   function parseTodoStartDateValue(value){
@@ -1893,19 +1893,12 @@
     return changed;
   }
 
-  function ensureLihuiTodoSchedule(){
-    // 只在麗卉模式自動產生 TODO待辦；紹薇模式完全不處理。
-    // V73：從啟用日期一路補到今天，避免 5/15 啟用時漏掉 5 月後半段的待辦。
-    if(!isLihui() || !state || !Array.isArray(state.tasks)) return false;
-
-    const now = today();
-    const todayKey = dateKey(now);
-    const schedule = getLihuiTodoSchedule();
-    const scheduleDays = Array.isArray(schedule.days) ? schedule.days : [];
+  function getLihuiTodoDueDates(schedule = getLihuiTodoSchedule(), monthsAhead = 18){
     const startDateKey = schedule.startDate || LIHUI_TODO_DEFAULT_START_DATE;
-    const start = toDate(startDateKey) || new Date(now.getFullYear(), now.getMonth(), 1);
+    const start = toDate(startDateKey) || today();
+    const scheduleDays = Array.isArray(schedule.days) ? schedule.days : [];
     const monthCursor = new Date(start.getFullYear(), start.getMonth(), 1);
-    const endMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endMonth = new Date(start.getFullYear(), start.getMonth() + monthsAhead + 1, 1);
     const dueDates = [];
 
     while(monthCursor <= endMonth){
@@ -1918,43 +1911,79 @@
 
       targetDays.forEach(day => {
         const dueDate = dateKey(new Date(year, month, day));
-        if(dueDate >= startDateKey && dueDate <= todayKey) dueDates.push(dueDate);
+        if(dueDate >= startDateKey) dueDates.push(dueDate);
       });
 
       monthCursor.setMonth(monthCursor.getMonth() + 1);
     }
+    return [...new Set(dueDates)].sort();
+  }
 
+  function makeLihuiTodoTask(dueDate){
+    return {
+      id: uid(),
+      title: LIHUI_TODO_TITLE,
+      dueDate,
+      assignee: '',
+      note: '每月固定提醒｜單筆輪替',
+      progress: '',
+      lihuiAssign: false,
+      repeatType: '',
+      repeatEvery: 0,
+      calendarOnly: false,
+      group: 'high',
+      manualGroup: false,
+      done: false,
+      order: nextOrderBySource('profile', 'high'),
+      createdAt: new Date().toISOString(),
+      autoSpawnedFrom: '',
+      sourceId: '',
+      occurrenceOriginalDate: dueDate,
+      generatedDates: [],
+      isStarred: false,
+      repeatEnabled: true,
+      taskCategory: 'todo',
+      autoTodoKind: LIHUI_TODO_AUTO_KIND
+    };
+  }
+
+  function ensureLihuiTodoSchedule(){
+    // 只在麗卉模式自動產生 TODO待辦；紹薇模式完全不處理。
+    // V74：單筆輪替。只要有一筆未完成 TODO，後面的日期先不產生；完成後才產生下一個日期。
+    if(!isLihui() || !state || !Array.isArray(state.tasks)) return false;
+
+    const schedule = getLihuiTodoSchedule();
+    const dueDates = getLihuiTodoDueDates(schedule, 18);
     let changed = false;
-    [...new Set(dueDates)].sort().forEach(dueDate => {
-      const exists = state.tasks.some(t => t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && t.dueDate === dueDate);
-      if(exists) return;
-      state.tasks.push({
-        id: uid(),
-        title: LIHUI_TODO_TITLE,
-        dueDate,
-        assignee: '',
-        note: '每月固定提醒',
-        progress: '',
-        lihuiAssign: false,
-        repeatType: '',
-        repeatEvery: 0,
-        calendarOnly: false,
-        group: 'high',
-        manualGroup: false,
-        done: false,
-        order: nextOrderBySource('profile', 'high'),
-        createdAt: new Date().toISOString(),
-        autoSpawnedFrom: '',
-        sourceId: '',
-        occurrenceOriginalDate: dueDate,
-        generatedDates: [],
-        isStarred: false,
-        repeatEnabled: true,
-        taskCategory: 'todo',
-        autoTodoKind: LIHUI_TODO_AUTO_KIND
-      });
-      changed = true;
-    });
+
+    // 舊版可能已經補出很多筆未完成 TODO；自動保留最早那筆，其餘未完成 TODO 移除，避免畫面堆一堆。
+    const activeTodos = state.tasks
+      .filter(t => t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && !t.done)
+      .sort((a,b) => (a.dueDate || '').localeCompare(b.dueDate || '') || orderVal(a.order) - orderVal(b.order));
+
+    if(activeTodos.length > 0){
+      const keepId = activeTodos[0].id;
+      const before = state.tasks.length;
+      state.tasks = state.tasks.filter(t => !(t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && !t.done && t.id !== keepId));
+      changed = changed || state.tasks.length !== before;
+      return changed;
+    }
+
+    const completedDueDates = state.tasks
+      .filter(t => t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && t.done && t.dueDate)
+      .map(t => t.dueDate)
+      .sort();
+    const lastCompletedDueDate = completedDueDates.length ? completedDueDates[completedDueDates.length - 1] : '';
+    const nextDueDate = dueDates.find(d => !lastCompletedDueDate || d > lastCompletedDueDate);
+
+    if(nextDueDate){
+      const exists = state.tasks.some(t => t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && t.dueDate === nextDueDate && !t.done);
+      if(!exists){
+        state.tasks.push(makeLihuiTodoTask(nextDueDate));
+        changed = true;
+      }
+    }
+
     return changed;
   }
 
@@ -2409,14 +2438,14 @@
           <span class="todoScheduleHint" style="font-weight:900;color:#4c5566;">啟用日期</span>
           <input id="todoStartDateInput" class="todoDateInput" type="text" value="${escapeHtml(fmtROC(schedule.startDate || LIHUI_TODO_DEFAULT_START_DATE).split(' ')[0])}" placeholder="例如 115/5/15">
           <button id="todoStartDateSaveBtn" class="softBtn on" type="button">更新啟用日</button>
-          <span class="todoScheduleHint">會從啟用日起一路補到今天</span>
+          <span class="todoScheduleHint">只顯示目前輪到的一筆，完成後才產生下一個日期</span>
         </div>
         <div class="todoDateChips">${chipHtml}</div>
         <div class="todoScheduleAddRow">
           <input id="todoDateInput" class="todoDateInput" type="text" placeholder="輸入 1-31 或 月底">
           <button id="todoDateAddBtn" class="softBtn on" type="button">＋新增日期</button>
           <button id="todoDateCancelBtn" class="softBtn todoCancelBtn" type="button">取消更改</button>
-          <span id="todoScheduleMsg" class="todoScheduleMsg">新增後會自動記憶，只影響之後產生的 TODO</span>
+          <span id="todoScheduleMsg" class="todoScheduleMsg">新增後會自動記憶，TODO只會顯示目前輪到的一筆</span>
         </div>
       </div>`;
   }
@@ -2508,7 +2537,7 @@
         if(input) input.value = '';
         if(addBtn) addBtn.textContent = '＋新增日期';
         if(cancelBtn) cancelBtn.classList.remove('show');
-        setTodoScheduleMessage('新增後會自動記憶，只影響之後產生的 TODO', false);
+        setTodoScheduleMessage('新增後會自動記憶，TODO只會顯示目前輪到的一筆', false);
       };
       const submitTodoDate = () => {
         if(!input) return;
