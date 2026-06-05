@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V75：修正TODO重新開啟重複新增；保留TODO識別並合併舊版重複；紹薇維持原功能 -->
+<!-- V76：匯出/匯入按鈕明確標示JSON；延續V75 TODO不重複修正；紹薇維持原功能 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V75 TODO不重複修正</title>
+<title>麗卉待辦 V76 JSON匯出匯入</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -692,8 +692,8 @@
         </div>
         <button id="saveBtn" class="btn btn-add" type="button">新增</button>
         <button id="clearBtn" class="btn btn-clear" type="button">清空</button>
-        <button id="exportBtn" class="btn btn-export" type="button">匯出</button>
-        <button id="importBtn" class="btn btn-import" type="button">匯入</button>
+        <button id="exportBtn" class="btn btn-export" type="button" title="匯出JSON備份檔">匯出JSON</button>
+        <button id="importBtn" class="btn btn-import" type="button" title="匯入JSON備份檔">匯入JSON</button>
       </div>
       <div class="row2" style="margin-top:10px;">
         <input id="noteInput" class="input" type="text" placeholder="備註">
@@ -3457,9 +3457,9 @@
         persist();
         clearForm();
         renderAll();
-        alert('匯入完成');
+        alert('JSON匯入完成');
       }catch(e){
-        alert('匯入失敗，請確認 JSON 檔案格式');
+        alert('JSON匯入失敗，請確認檔案格式');
       }
     };
     reader.readAsText(file, 'utf-8');
