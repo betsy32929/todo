@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- V76：匯出/匯入按鈕明確標示JSON；延續V75 TODO不重複修正；紹薇維持原功能 -->
+<!-- V77：TODO單筆輪替保留進度，不再因舊重複資料退回5/15；匯出/匯入JSON；紹薇維持原功能 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -967,10 +967,12 @@
     const rawDays = Array.isArray(raw.days) ? raw.days : def.days;
     const days = [...new Set(rawDays.map(x => Math.floor(Number(x))).filter(n => Number.isFinite(n) && n >= 1 && n <= 31))].sort((a,b) => a - b);
     const normalizedStart = rocToIso(normalizeFlexibleDate(raw.startDate || '')) || def.startDate;
+    const normalizedProgress = rocToIso(normalizeFlexibleDate(raw.lastCompletedDueDate || raw.todoLastCompletedDueDate || '')) || '';
     return {
       days: days.length ? days : [...def.days],
       endOfMonth: raw.endOfMonth === undefined ? def.endOfMonth : !!raw.endOfMonth,
-      startDate: normalizedStart
+      startDate: normalizedStart,
+      lastCompletedDueDate: normalizedProgress
     };
   }
   function getLihuiTodoSchedule(){
@@ -1964,7 +1966,7 @@
 
   function ensureLihuiTodoSchedule(){
     // 只在麗卉模式自動產生 TODO待辦；紹薇模式完全不處理。
-    // V75：單筆輪替＋防重複。只要有一筆未完成 TODO，後面的日期先不產生；舊版重複也會合併。
+    // V77：單筆輪替＋保留進度。若已完成到 5/28，就不會因舊重複資料又退回 5/15。
     if(!isLihui() || !state || !Array.isArray(state.tasks)) return false;
 
     const schedule = getLihuiTodoSchedule();
@@ -1979,12 +1981,35 @@
       }
     });
 
-    // 舊版可能已經補出很多筆未完成 TODO；自動保留最早那筆，其餘未完成 TODO 移除，避免畫面堆一堆。
+    // 以「已完成到哪一個 TODO 日期」為進度，不用最早未完成日期硬退回。
+    // 已完成資料存在時，以清單為準；若完成資料被清掉，才用 schedule.lastCompletedDueDate 當備援。
+    const completedDueDates = state.tasks
+      .filter(t => isLihuiAutoTodoTask(t) && t.done && t.dueDate)
+      .map(t => t.dueDate)
+      .sort();
+    const lastCompletedFromTasks = completedDueDates.length ? completedDueDates[completedDueDates.length - 1] : '';
+    const savedProgress = schedule.lastCompletedDueDate || '';
+    const lastCompletedDueDate = lastCompletedFromTasks || savedProgress;
+
+    if(lastCompletedFromTasks && schedule.lastCompletedDueDate !== lastCompletedFromTasks){
+      schedule.lastCompletedDueDate = lastCompletedFromTasks;
+      state.todoSchedule = normalizeLihuiTodoSchedule(schedule);
+      changed = true;
+    }
+
+    // 若有舊版重複產生的未完成 TODO，先把「已完成進度以前／等於進度」的舊資料清掉。
+    if(lastCompletedDueDate){
+      const before = state.tasks.length;
+      state.tasks = state.tasks.filter(t => !(isLihuiAutoTodoTask(t) && !t.done && t.dueDate && t.dueDate <= lastCompletedDueDate));
+      changed = changed || state.tasks.length !== before;
+    }
+
     const activeTodos = state.tasks
       .filter(t => isLihuiAutoTodoTask(t) && !t.done)
       .sort((a,b) => (a.dueDate || '').localeCompare(b.dueDate || '') || orderVal(a.order) - orderVal(b.order));
 
     if(activeTodos.length > 0){
+      // 只保留進度後的第一筆。例：已完成到 5/26，目前就停 5/28，不退回 5/15。
       const keepId = activeTodos[0].id;
       const before = state.tasks.length;
       state.tasks = state.tasks.filter(t => !(isLihuiAutoTodoTask(t) && !t.done && t.id !== keepId));
@@ -1992,11 +2017,6 @@
       return changed;
     }
 
-    const completedDueDates = state.tasks
-      .filter(t => isLihuiAutoTodoTask(t) && t.done && t.dueDate)
-      .map(t => t.dueDate)
-      .sort();
-    const lastCompletedDueDate = completedDueDates.length ? completedDueDates[completedDueDates.length - 1] : '';
     const nextDueDate = dueDates.find(d => !lastCompletedDueDate || d > lastCompletedDueDate);
 
     if(nextDueDate){
@@ -3428,7 +3448,12 @@
   function exportState(){
     const now = new Date();
     const fileName = `${currentProfileName()}待辦備份_${rocYear(now.getFullYear())}年${now.getMonth()+1}月${now.getDate()}日_${now.getHours()}點${pad(now.getMinutes())}分.json`;
-    const blob = new Blob([JSON.stringify({tasks: state.tasks, sharedMemo: sharedState.sharedMemo || '', midOneItems: sharedState.midOneItems || []}, null, 2)], {type:'application/json'});
+    const blob = new Blob([JSON.stringify({
+      tasks: state.tasks,
+      todoSchedule: state.todoSchedule || getLihuiTodoSchedule(),
+      sharedMemo: sharedState.sharedMemo || '',
+      midOneItems: sharedState.midOneItems || []
+    }, null, 2)], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = fileName;
@@ -3445,6 +3470,9 @@
         const tasks = Array.isArray(data) ? data : data.tasks;
         if(!Array.isArray(tasks)) throw new Error('bad');
         state.tasks = tasks.map(normalizeLegacyTask).filter(t => t.title);
+        if(data && data.todoSchedule){
+          state.todoSchedule = normalizeLihuiTodoSchedule(data.todoSchedule);
+        }
         if(typeof data.sharedMemo === 'string'){
           sharedState.sharedMemo = data.sharedMemo;
           loadSharedMemo();
