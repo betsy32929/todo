@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V74：麗卉TODO待辦改為單筆輪替；完成目前日期後才產生下一個日期；日期可新增/更改/刪除；紹薇維持原功能 -->
+<!-- V75：修正TODO重新開啟重複新增；保留TODO識別並合併舊版重複；紹薇維持原功能 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V74 TODO單筆輪替</title>
+<title>麗卉待辦 V75 TODO不重複修正</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -1541,6 +1541,7 @@
       isStarred: !!task.isStarred || Number(task.starLevel || 0) > 0,
       repeatEnabled: 'repeatEnabled' in task ? !!task.repeatEnabled : true,
       taskCategory: String(task.taskCategory || task.kind || 'todo'),
+      autoTodoKind: task.autoTodoKind || (String(task.title || '').trim() === LIHUI_TODO_TITLE && dueDate ? LIHUI_TODO_AUTO_KIND : ''),
       sharedCompleteBy: task.sharedCompleteBy === 'shaowei' ? 'shaowei' : (task.sharedCompleteBy === 'lihui' ? 'lihui' : ''),
       sharedReviewedBy: task.sharedReviewedBy === 'shaowei' ? 'shaowei' : (task.sharedReviewedBy === 'lihui' ? 'lihui' : '')
     };
@@ -1947,37 +1948,59 @@
     };
   }
 
+  function isLihuiAutoTodoTask(task){
+    if(!task) return false;
+    if(task.autoTodoKind === LIHUI_TODO_AUTO_KIND) return true;
+    const title = String(task.title || '').trim();
+    const note = String(task.note || '');
+    return title === LIHUI_TODO_TITLE && !!task.dueDate && (
+      note.includes('每月固定提醒') ||
+      note.includes('單筆輪替') ||
+      note.includes('從啟用日') ||
+      note.includes('TODO') ||
+      note === ''
+    );
+  }
+
   function ensureLihuiTodoSchedule(){
     // 只在麗卉模式自動產生 TODO待辦；紹薇模式完全不處理。
-    // V74：單筆輪替。只要有一筆未完成 TODO，後面的日期先不產生；完成後才產生下一個日期。
+    // V75：單筆輪替＋防重複。只要有一筆未完成 TODO，後面的日期先不產生；舊版重複也會合併。
     if(!isLihui() || !state || !Array.isArray(state.tasks)) return false;
 
     const schedule = getLihuiTodoSchedule();
     const dueDates = getLihuiTodoDueDates(schedule, 18);
     let changed = false;
 
+    // 舊版或雲端讀回時可能沒有 autoTodoKind；先補上識別，避免每天打開又新增同一筆。
+    state.tasks.forEach(t => {
+      if(isLihuiAutoTodoTask(t) && t.autoTodoKind !== LIHUI_TODO_AUTO_KIND){
+        t.autoTodoKind = LIHUI_TODO_AUTO_KIND;
+        changed = true;
+      }
+    });
+
     // 舊版可能已經補出很多筆未完成 TODO；自動保留最早那筆，其餘未完成 TODO 移除，避免畫面堆一堆。
     const activeTodos = state.tasks
-      .filter(t => t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && !t.done)
+      .filter(t => isLihuiAutoTodoTask(t) && !t.done)
       .sort((a,b) => (a.dueDate || '').localeCompare(b.dueDate || '') || orderVal(a.order) - orderVal(b.order));
 
     if(activeTodos.length > 0){
       const keepId = activeTodos[0].id;
       const before = state.tasks.length;
-      state.tasks = state.tasks.filter(t => !(t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && !t.done && t.id !== keepId));
+      state.tasks = state.tasks.filter(t => !(isLihuiAutoTodoTask(t) && !t.done && t.id !== keepId));
       changed = changed || state.tasks.length !== before;
       return changed;
     }
 
     const completedDueDates = state.tasks
-      .filter(t => t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && t.done && t.dueDate)
+      .filter(t => isLihuiAutoTodoTask(t) && t.done && t.dueDate)
       .map(t => t.dueDate)
       .sort();
     const lastCompletedDueDate = completedDueDates.length ? completedDueDates[completedDueDates.length - 1] : '';
     const nextDueDate = dueDates.find(d => !lastCompletedDueDate || d > lastCompletedDueDate);
 
     if(nextDueDate){
-      const exists = state.tasks.some(t => t && t.autoTodoKind === LIHUI_TODO_AUTO_KIND && t.dueDate === nextDueDate && !t.done);
+      const exists = state.tasks.some(t => isLihuiAutoTodoTask(t) && t.dueDate === nextDueDate && !t.done);
       if(!exists){
         state.tasks.push(makeLihuiTodoTask(nextDueDate));
         changed = true;
@@ -3635,7 +3658,7 @@
     if(!supabaseClient || !syncEnabled || isApplyingRemote) return false;
     const payload = {
       app_name: getRemoteAppName(),
-      state_json: { tasks: state.tasks || [], handoffMemo: getHandoffMemoBox() ? (getHandoffMemoBox().value || '') : '', todoNote: getProfileTodoNoteBox() ? (getProfileTodoNoteBox().value || '') : '' },
+      state_json: { tasks: state.tasks || [], handoffMemo: getHandoffMemoBox() ? (getHandoffMemoBox().value || '') : '', todoNote: getProfileTodoNoteBox() ? (getProfileTodoNoteBox().value || '') : '', todoSchedule: state.todoSchedule || getLihuiTodoSchedule() },
       memo_text: els.memoBox ? (els.memoBox.value || '') : '',
       todo_note_text: getProfileTodoNoteBox() ? (getProfileTodoNoteBox().value || '') : '',
       updated_at: new Date().toISOString()
@@ -3725,6 +3748,7 @@
       state.memo = row.memo_text || '';
       state.handoffMemo = String(row.state_json && row.state_json.handoffMemo || '');
       state.todoNote = row.todo_note_text || String(row.state_json && row.state_json.todoNote || '');
+      state.todoSchedule = normalizeLihuiTodoSchedule(row.state_json && row.state_json.todoSchedule);
       if(els.memoBox) els.memoBox.value = state.memo;
       const handoffMemoBox = getHandoffMemoBox();
       if(handoffMemoBox) handoffMemoBox.value = state.handoffMemo;
