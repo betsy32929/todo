@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V82：TODO固定從115/5/28起算；手動編輯TODO不再被完成進度推到下一期；紹薇維持原功能 -->
+<!-- V83：顯示版本；取消人員tag；麗卉記事加高；重複設定新增每天 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V82 TODO編輯不跳下一期</title>
+<title>麗卉待辦 V83</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -40,7 +40,7 @@
   .fieldErrorIcon{width:22px;height:22px;border-radius:4px;background:#ff9800;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex:0 0 22px;font-weight:900;line-height:1}
   .fieldErrorText{white-space:nowrap}
   .row1,.row2{display:grid;gap:10px;align-items:center}
-  .row1{grid-template-columns:minmax(0,0.95fr) 320px 150px 118px 95px 95px 95px}
+  .row1{grid-template-columns:minmax(0,1fr) 320px 118px 95px 95px 95px}
   .row2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 100px repeat(7,80px)}
   .btn{border:none;border-radius:14px;padding:11px 10px;font-size:14px;font-weight:900;cursor:pointer;white-space:nowrap}
   .btn-add{background:linear-gradient(180deg,#df7992,#cf647f);color:#fff;font-size:16px}
@@ -54,6 +54,7 @@
   .tag{border:1px solid var(--tag-border);background:var(--tag);color:#a25d72;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:900;cursor:pointer}
   .tag.active{background:var(--tag-active);color:#fff;border-color:var(--tag-active)}
   .memoBox{width:100%;height:120px;resize:vertical;border:1px solid #d7dcea;border-radius:16px;padding:12px 14px;font-size:15px;outline:none}
+  #memoBox{min-height:156px;height:156px;line-height:1.55}
   .memoDualGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .memoPanel{display:flex;flex-direction:column;gap:8px}
   .memoPanelTitle{font-size:15px;font-weight:900;color:#4c5566}
@@ -280,7 +281,7 @@
     .shotBtn{height:46px;padding:0 14px;font-size:15px}
   }
   @media (max-width:1250px){
-    .row1{grid-template-columns:minmax(0,0.9fr) 260px 140px 110px 90px 90px 90px}
+    .row1{grid-template-columns:minmax(0,0.9fr) 260px 110px 90px 90px 90px}
     .row2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 92px repeat(7,74px)}
     .weekGrid{grid-template-columns:repeat(4,1fr)}
   }
@@ -350,7 +351,7 @@
     .memoDualGrid{grid-template-columns:1fr 1fr !important;}
     .boardWrap{grid-template-columns:1fr 1fr 1fr !important;}
     .weekGrid{grid-template-columns:repeat(7,1fr) !important;}
-    .row1{grid-template-columns:minmax(0,0.95fr) 320px 150px 118px 95px 95px 95px !important;}
+    .row1{grid-template-columns:minmax(0,0.95fr) 320px 118px 95px 95px 95px !important;}
     .row2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 100px repeat(7,80px) !important;}
     .repeatTop{grid-template-columns:minmax(0,1fr) auto !important;}
     .supabaseTopRow{grid-template-columns:minmax(0,1.05fr) minmax(0,1.15fr) auto auto auto !important;}
@@ -597,7 +598,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單</span>
+        <span class="pageTitleText">待辦清單 V83</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -664,7 +665,7 @@
       <div class="memoDualGrid">
         <div class="memoPanel">
           <div id="memoMainTitle" class="memoPanelTitle">記事</div>
-          <textarea id="memoBox" class="memoBox" placeholder="這裡可以自由記事，會自動記憶"></textarea>
+          <textarea id="memoBox" class="memoBox" rows="6" placeholder="這裡可以自由記事，會自動記憶"></textarea>
         </div>
         <div class="memoPanel">
           <div id="handoffMemoTitle" class="memoPanelTitle">紹薇交接</div>
@@ -685,7 +686,7 @@
       </div>
       <div class="row1">
         <input id="titleInput" class="input" type="text" placeholder="輸入事項">
-        <input id="assigneeInput" class="input" type="text" placeholder="@人員">
+        <input id="assigneeInput" type="hidden" value="">
         <div class="dateField">
           <input id="dateInput" class="input" type="text" placeholder="點選選擇日期" readonly>
           <div id="dateError" class="fieldError"><div class="fieldErrorInner"><span class="fieldErrorIcon">!</span><span class="fieldErrorText">日期錯誤</span></div></div>
@@ -699,6 +700,7 @@
         <input id="noteInput" class="input" type="text" placeholder="備註">
         <select id="repeatTypeInput" class="select">
           <option value="">不重複</option>
+          <option value="daily">每天</option>
           <option value="weekly">每週</option>
           <option value="monthly">每月</option>
           <option value="yearly">每年</option>
@@ -739,7 +741,6 @@
       </label>
     </div>
     <div class="cardBody">
-      <div class="chipRow" id="assigneeTags" style="margin-bottom:12px;"></div>
       <div id="simpleStats" class="simpleStats" style="display:none;"></div>
       <div class="boardWrap" id="boardWrap">
         <div class="col" data-group="high">
@@ -1444,10 +1445,10 @@
       yearly: { placeholder: '幾年（空白＝明年）', title: '空白代表明年；填 2 代表每 2 年' },
       every_x_days: { placeholder: '幾天', title: '請輸入每隔幾天' }
     };
-    if(!type){
+    if(!type || type === 'daily'){
       els.repeatEveryInput.value = '';
-      els.repeatEveryInput.placeholder = '間隔';
-      els.repeatEveryInput.title = '';
+      els.repeatEveryInput.placeholder = type === 'daily' ? '每天自動重複' : '間隔';
+      els.repeatEveryInput.title = type === 'daily' ? '每天都會自動重複，包含週六、週日' : '';
       els.repeatEveryInput.disabled = true;
       els.repeatEveryInput.classList.add('repeatEveryDisabled');
       return;
@@ -1594,6 +1595,7 @@
 
   function repeatText(task){
     if(!task.repeatType) return '';
+    if(task.repeatType === 'daily') return '每天';
     if(task.repeatType === 'weekly'){
       const n = repeatEveryNum(task, 1);
       return n > 1 ? `每${n}週` : '每週';
@@ -1619,6 +1621,7 @@
   function getNextRecurringDate(task, fromDate){
     if(!task || !task.repeatType || !fromDate) return '';
     const base = toDate(fromDate);
+    if(task.repeatType === 'daily') return dateKey(addDays(base, 1));
     if(task.repeatType === 'weekly'){
       const n = repeatEveryNum(task, 1);
       return dateKey(addDays(base, 7 * n));
@@ -1767,7 +1770,9 @@
     const target = toDate(dayKey);
     const base = toDate(task.dueDate);
     if(target < base) return false;
-    if(task.repeatType === 'weekly'){
+    if(task.repeatType === 'daily'){
+      return true;
+    }else if(task.repeatType === 'weekly'){
       const diff = Math.floor((target - base)/86400000);
       const n = repeatEveryNum(task, 1);
       return diff >= 0 && diff % (7 * n) === 0;
@@ -1791,6 +1796,8 @@
     const target = toDate(dayKey);
     const base = toDate(task.dueDate);
     if(target < base) return '';
+
+    if(task.repeatType === 'daily') return dayKey;
 
     if(task.repeatType === 'weekly'){
       const n = repeatEveryNum(task, 1);
@@ -2278,7 +2285,7 @@
       els.dateInput.focus();
       return;
     }
-    const assignee = els.assigneeInput ? els.assigneeInput.value.trim().replace(/^@/,'') : '';
+    const assignee = els.assigneeInput ? els.assigneeInput.value.trim().replace(/^@/,'') : (editingTask ? editingTask.assignee || '' : '');
     const note = els.noteInput ? els.noteInput.value.trim() : '';
     const lihuiAssign = !!(els.lihuiAssignBtn && els.lihuiAssignBtn.dataset.active === '1');
     const commonActive = extra.forceCommon ? true : isCommonFormActive();
@@ -2287,6 +2294,7 @@
     let repeatEvery = occurrenceEditContext ? 0 : Math.floor(Number(els.repeatEveryInput.value || 0));
     if(!Number.isFinite(repeatEvery) || repeatEvery < 0) repeatEvery = 0;
     if(!repeatType) repeatEvery = 0;
+    if(repeatType === 'daily') repeatEvery = 0;
 
     if(!occurrenceEditContext && repeatType === 'every_x_days' && repeatEvery <= 0){
       alert('幾天請輸入 1 以上');
@@ -2749,6 +2757,10 @@
   }
 
   function renderTags(){
+    currentFilterUser = '';
+    if(els.assigneeTags) els.assigneeTags.innerHTML = '';
+    return;
+    /* V82 舊版人員 tag 篩選保留於原始碼，V83 起不再顯示。
     if(isShaowei()){
       if(els.assigneeTags) els.assigneeTags.innerHTML = '';
       return;
@@ -2771,6 +2783,7 @@
         renderAll();
       };
     });
+    */
   }
 
   function getDisplayGroup(task, source = 'profile'){
