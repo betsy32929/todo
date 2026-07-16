@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V83：顯示版本；取消人員tag；麗卉記事加高；重複設定新增每天 -->
+<!-- V84：「每天」改為上班日每天，自動跳過星期六、星期日 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V83</title>
+<title>麗卉待辦 V84</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -598,7 +598,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V83</span>
+        <span class="pageTitleText">待辦清單 V84</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -1448,7 +1448,7 @@
     if(!type || type === 'daily'){
       els.repeatEveryInput.value = '';
       els.repeatEveryInput.placeholder = type === 'daily' ? '每天自動重複' : '間隔';
-      els.repeatEveryInput.title = type === 'daily' ? '每天都會自動重複，包含週六、週日' : '';
+      els.repeatEveryInput.title = type === 'daily' ? '上班日每天自動重複，星期六、星期日會跳過' : '';
       els.repeatEveryInput.disabled = true;
       els.repeatEveryInput.classList.add('repeatEveryDisabled');
       return;
@@ -1612,6 +1612,18 @@
     return '';
   }
 
+  function nextWorkday(fromDate){
+    let next = addDays(fromDate, 1);
+    while(next.getDay() === 0 || next.getDay() === 6) next = addDays(next, 1);
+    return next;
+  }
+
+  function latestWorkdayOnOrBefore(targetDate){
+    let candidate = new Date(targetDate);
+    while(candidate.getDay() === 0 || candidate.getDay() === 6) candidate = addDays(candidate, -1);
+    return candidate;
+  }
+
   function repeatBadgeText(task){
     if(!task || !task.repeatType) return '';
     if(task.dueDate && task.dueDate === todayStr()) return '今天';
@@ -1621,7 +1633,7 @@
   function getNextRecurringDate(task, fromDate){
     if(!task || !task.repeatType || !fromDate) return '';
     const base = toDate(fromDate);
-    if(task.repeatType === 'daily') return dateKey(addDays(base, 1));
+    if(task.repeatType === 'daily') return dateKey(nextWorkday(base));
     if(task.repeatType === 'weekly'){
       const n = repeatEveryNum(task, 1);
       return dateKey(addDays(base, 7 * n));
@@ -1771,7 +1783,7 @@
     const base = toDate(task.dueDate);
     if(target < base) return false;
     if(task.repeatType === 'daily'){
-      return true;
+      return target.getDay() !== 0 && target.getDay() !== 6;
     }else if(task.repeatType === 'weekly'){
       const diff = Math.floor((target - base)/86400000);
       const n = repeatEveryNum(task, 1);
@@ -1797,7 +1809,10 @@
     const base = toDate(task.dueDate);
     if(target < base) return '';
 
-    if(task.repeatType === 'daily') return dayKey;
+    if(task.repeatType === 'daily'){
+      const candidate = latestWorkdayOnOrBefore(target);
+      return candidate < base ? '' : dateKey(candidate);
+    }
 
     if(task.repeatType === 'weekly'){
       const n = repeatEveryNum(task, 1);
