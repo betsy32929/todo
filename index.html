@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V85：TODO待辦不再顯示或重新寫入系統輪替說明 -->
+<!-- V86：今天／明天橢圓標示，並自動分到首要／次重要 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V85</title>
+<title>麗卉待辦 V86</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -331,6 +331,7 @@
   .badge.handoff{background:#fff1f3;border-color:#efc6d0;color:#b34d67}
   .badge.common{background:#f3f5ff;border-color:#d9def8;color:#5061a8}
   .badge.today{background:#fff0a8;border-color:#efd36f;color:#7a5b00;box-shadow:0 1px 0 rgba(255,255,255,.75)}
+  .badge.tomorrow{background:#f7f3dc;border-color:#ddd3a6;color:#796f45}
 
   .flatpickr-input[readonly]{background:#fff;cursor:pointer}
 
@@ -598,7 +599,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V85</span>
+        <span class="pageTitleText">待辦清單 V86</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -2557,7 +2558,9 @@
     const meta = [];
     if(task.dueDate){
       const dueText = `<span class="${isOverdue(task) ? 'danger' : ''}">${escapeHtml(fmtROC(task.dueDate))}${isOverdue(task) ? '｜已過期' : ''}</span>`;
+      const tomorrowKey = dateKey(addDays(today(), 1));
       if(task.dueDate === todayStr()) meta.push(`${dueText} <span class="badge today">今天</span>`);
+      else if(task.dueDate === tomorrowKey) meta.push(`${dueText} <span class="badge tomorrow">明天</span>`);
       else meta.push(dueText);
     }
     if(task.assignee) meta.push(escapeHtml('@' + task.assignee));
@@ -2813,8 +2816,13 @@
       if(task.taskCategory === 'work') return 'mid';
       return 'high';
     }
-    // 麗卉：行事曆事項第一次提前一天進清單時預設在首要；
-    // 但使用者手動拖曳到首要／次重要／等待後，之後就依手動分類固定。
+    // 麗卉：未手動分類的待辦，今天自動到首要、明天自動到次重要。
+    // 使用者手動拖曳後保留手動分類，不再自動移動。
+    if(task && task.taskCategory !== 'work' && !task.manualGroup && task.dueDate){
+      if(task.dueDate === todayStr()) return 'high';
+      if(task.dueDate === dateKey(addDays(today(), 1))) return 'mid';
+    }
+    // 其他行事曆事項第一次進清單時預設在首要。
     if(task && task.calendarOnly && task.taskCategory !== 'work' && !task.manualGroup) return 'high';
     return task.group || (source === 'shared' ? 'mid' : 'high');
   }
