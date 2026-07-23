@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V86：今天／明天橢圓標示，並自動分到首要／次重要 -->
+<!-- V87：日期為今天的行事曆事件一律自動歸到首要 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V86</title>
+<title>麗卉待辦 V87</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -599,7 +599,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V86</span>
+        <span class="pageTitleText">待辦清單 V87</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -2816,7 +2816,9 @@
       if(task.taskCategory === 'work') return 'mid';
       return 'high';
     }
-    // 麗卉：未手動分類的待辦，今天自動到首要、明天自動到次重要。
+    // 麗卉：日期為今天的行事曆事件一律到首要，優先於過去的手動分類。
+    if(task && task.calendarOnly && task.taskCategory !== 'work' && task.dueDate === todayStr()) return 'high';
+    // 其他未手動分類的待辦，今天自動到首要、明天自動到次重要。
     // 使用者手動拖曳後保留手動分類，不再自動移動。
     if(task && task.taskCategory !== 'work' && !task.manualGroup && task.dueDate){
       if(task.dueDate === todayStr()) return 'high';
