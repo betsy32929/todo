@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V101：今日事項加入清單後可直接從今日清單刪除並重新選取 -->
+<!-- V102：月底雙月項目下方備註輸入提示改為備註欄 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V101</title>
+<title>麗卉待辦 V102</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -670,7 +670,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V101</span>
+        <span class="pageTitleText">待辦清單 V102</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -1536,7 +1536,7 @@
     if(monthHint)monthHint.textContent=`${now.getMonth()+1}月${(now.getMonth()+1)%2===0?'｜雙月':''}`;
     const monthList=document.getElementById('swMonthList');
     if(monthList){
-      monthList.innerHTML=config.month.map((title,i)=>`<div class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong><input class="swMonthNote" type="text" data-sw-month-note="${i}" value="${escapeHtml(monthState.notes[i]||'')}" placeholder="輸入備註……"></span></div>`).join('');
+      monthList.innerHTML=config.month.map((title,i)=>`<div class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong><input class="swMonthNote" type="text" data-sw-month-note="${i}" value="${escapeHtml(monthState.notes[i]||'')}" placeholder="備註欄"></span></div>`).join('');
       monthList.querySelectorAll('[data-sw-month]').forEach(box=>box.onchange=()=>{
         monthState.done[box.dataset.swMonth]=box.checked;
         saveShaoweiDailyState(all);
