@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V99：今日清單依時間排序，三欄採橫向 123／456 順序 -->
+<!-- V100：事項設定支援拖曳排序，設定按鈕移至今日清單未完成數旁 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V99</title>
+<title>麗卉待辦 V100</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -618,6 +618,8 @@
   .swTaskText{display:grid;gap:2px;min-width:0;}
   .swTaskText strong{font-size:16px;line-height:1.45;color:#334155;overflow-wrap:anywhere;}
   .swTaskText small{font-size:13px;line-height:1.35;color:#94a3b8;font-weight:900;}
+  .swMonthNote{width:100%!important;height:30px!important;margin:3px 0 0!important;padding:4px 7px!important;border:0!important;border-bottom:1px solid #cbd5e1!important;border-radius:0!important;background:transparent!important;color:#64748b;font-size:13px!important;outline:none;}
+  .swMonthNote:focus{border-bottom-color:#8b5cf6!important;box-shadow:none!important;}
   .swTaskRow.done strong{text-decoration:line-through;color:#94a3b8;}
   .swTaskBadge{border-radius:999px;background:#ede9fe;color:#6d28d9;padding:5px 9px;font-size:12px;font-weight:950;white-space:nowrap;}
   .swFlowGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px;}
@@ -639,7 +641,10 @@
   .swSettingsPanel.active{display:block;}
   .swSettingsAdd{display:grid;grid-template-columns:150px minmax(0,1fr) 150px auto;gap:8px;margin-bottom:10px;}
   .swSettingsList{display:grid;gap:8px;}
-  .swSettingsRow{display:grid;grid-template-columns:150px minmax(0,1fr) 150px auto auto;gap:8px;align-items:center;padding:9px;border:1px solid #e2e8f0;border-radius:13px;background:#fff;}
+  .swSettingsRow{display:grid;grid-template-columns:42px 140px minmax(0,1fr) 150px auto auto;gap:8px;align-items:center;padding:9px;border:1px solid #e2e8f0;border-radius:13px;background:#fff;}
+  .swSettingsRow.dragging{opacity:.5;border-color:#8b5cf6;}.swSettingsRow.dragOver{box-shadow:inset 0 3px 0 #8b5cf6;}
+  .swDragHandle{width:38px;height:38px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;color:#64748b;font-size:22px;line-height:1;font-weight:900;cursor:grab;display:flex;align-items:center;justify-content:center;}
+  .swDragHandle:active{cursor:grabbing;}
   .swSettingsInput{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:9px 10px;font-size:15px;}
   .swSettingsSave,.swSettingsDelete{border:0;border-radius:10px;padding:9px 11px;font-size:14px;font-weight:900;cursor:pointer;}
   .swSettingsSave{background:#e0f2fe;color:#075985;}.swSettingsDelete{background:#fee2e2;color:#b91c1c;}
@@ -662,7 +667,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V99</span>
+        <span class="pageTitleText">待辦清單 V100</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -688,7 +693,7 @@
         <div>
           <div class="swTodayDate" id="swTodayDate"></div>
         </div>
-        <div class="swOpenCount">尚未完成 <span id="swOpenCount">0</span></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div class="swOpenCount">尚未完成 <span id="swOpenCount">0</span></div><button class="swSettingsBtn" id="swSettingsOpen" type="button">⚙ 事項設定</button></div>
       </div>
 
       <div class="swSection">
@@ -697,7 +702,7 @@
       </div>
 
       <div class="swSection">
-        <div class="swSectionHead"><b>今日事項</b><span class="swSectionHint">先點序號展開，再點需要的單項加入今日清單</span><button class="swSettingsBtn" id="swSettingsOpen" type="button">⚙ 事項設定</button></div>
+        <div class="swSectionHead"><b>今日事項</b><span class="swSectionHint">先點序號展開，再點需要的單項加入今日清單</span></div>
         <div class="swFlowGrid" id="swFlowGrid">
           <button class="swFlowBtn" type="button" data-sw-flow="旁件">序0　旁件<small>旁1／旁2／旁3</small></button>
           <button class="swFlowBtn" type="button" data-sw-flow="NEW本">序1　NEW本<small>審核・房管・製作</small></button>
@@ -1469,6 +1474,7 @@
     all[dayKey]=dayState;
     const monthState=all['month|'+monthKey]&&typeof all['month|'+monthKey]==='object'?all['month|'+monthKey]:{done:{}};
     if(!monthState.done||typeof monthState.done!=='object')monthState.done={};
+    if(!monthState.notes||typeof monthState.notes!=='object')monthState.notes={};
     all['month|'+monthKey]=monthState;
     const weekNames='日一二三四五六';
     const dateEl=document.getElementById('swTodayDate');
@@ -1520,11 +1526,15 @@
     if(monthHint)monthHint.textContent=`${now.getMonth()+1}月${(now.getMonth()+1)%2===0?'｜雙月':''}`;
     const monthList=document.getElementById('swMonthList');
     if(monthList){
-      monthList.innerHTML=config.month.map((title,i)=>`<label class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong></span></label>`).join('');
+      monthList.innerHTML=config.month.map((title,i)=>`<div class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong><input class="swMonthNote" type="text" data-sw-month-note="${i}" value="${escapeHtml(monthState.notes[i]||'')}" placeholder="輸入備註……"></span></div>`).join('');
       monthList.querySelectorAll('[data-sw-month]').forEach(box=>box.onchange=()=>{
         monthState.done[box.dataset.swMonth]=box.checked;
         saveShaoweiDailyState(all);
         renderShaoweiDailyBoard();
+      });
+      monthList.querySelectorAll('[data-sw-month-note]').forEach(input=>input.oninput=()=>{
+        monthState.notes[input.dataset.swMonthNote]=input.value;
+        saveShaoweiDailyState(all);
       });
     }
     saveShaoweiDailyState(all);
@@ -1565,7 +1575,7 @@
       if(kind==='flow'&&Array.isArray(entry.selectedItems))entry.selectedItems=entry.selectedItems.filter(key=>!key.startsWith(`flow|${flow}|`));
       if(kind==='today'&&entry.done)Object.keys(entry.done).filter(key=>key.startsWith('fixed|today|')).forEach(key=>delete entry.done[key]);
       if(kind==='weekly'&&entry.done)Object.keys(entry.done).filter(key=>key.startsWith('weekly|')).forEach(key=>delete entry.done[key]);
-      if(kind==='month'&&stateKey.startsWith('month|')&&entry.done)entry.done={};
+      if(kind==='month'&&stateKey.startsWith('month|')){entry.done={};entry.notes={};}
     });
     saveShaoweiDailyState(all);
   }
@@ -1578,15 +1588,15 @@
     const config=loadShaoweiConfig();
     document.querySelectorAll('[data-sw-settings-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.swSettingsTab===swSettingsTab));
     if(swSettingsTab==='today'){
-      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><span></span><input class="swSettingsInput" id="swAddTodayTitle" placeholder="新增今日清單項目"><input class="swSettingsInput" id="swAddTodayBadge" placeholder="時間／標籤"><button class="swSettingsSave" data-sw-add="today">新增</button></div><div class="swSettingsList">${config.today.map((item,i)=>`<div class="swSettingsRow" data-index="${i}"><span>每天顯示</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(item.title)}"><input class="swSettingsInput" data-field="badge" value="${escapeHtml(item.badge||'')}"><button class="swSettingsSave" data-sw-save="today">儲存</button><button class="swSettingsDelete" data-sw-delete="today">刪除</button></div>`).join('')}</div></div>`;
+      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><span></span><input class="swSettingsInput" id="swAddTodayTitle" placeholder="新增今日清單項目"><input class="swSettingsInput" id="swAddTodayBadge" placeholder="時間／標籤"><button class="swSettingsSave" data-sw-add="today">新增</button></div><div class="swSettingsList">${config.today.map((item,i)=>`<div class="swSettingsRow" data-index="${i}"><button class="swDragHandle" type="button" draggable="true" title="按住拖曳排序">☰</button><span>每天顯示</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(item.title)}"><input class="swSettingsInput" data-field="badge" value="${escapeHtml(item.badge||'')}"><button class="swSettingsSave" data-sw-save="today">儲存</button><button class="swSettingsDelete" data-sw-delete="today">刪除</button></div>`).join('')}</div></div>`;
     }else if(swSettingsTab==='flows'){
       const flowNames=Object.keys(config.flows);
       if(!config.flows[swSettingsFlow])swSettingsFlow=flowNames[0]||'';
-      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><select class="swSettingsInput" id="swFlowSelect">${flowNames.map((flow,i)=>`<option value="${escapeHtml(flow)}" ${flow===swSettingsFlow?'selected':''}>序${i}　${escapeHtml(flow)}</option>`).join('')}</select><input class="swSettingsInput" id="swAddFlowTitle" placeholder="新增這個序號內的項目"><span></span><button class="swSettingsSave" data-sw-add="flows">新增</button></div><div class="swSettingsList">${(config.flows[swSettingsFlow]||[]).map((title,i)=>`<div class="swSettingsRow" data-index="${i}"><span>${escapeHtml(swSettingsFlow)}</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(title)}"><span></span><button class="swSettingsSave" data-sw-save="flows">儲存</button><button class="swSettingsDelete" data-sw-delete="flows">刪除</button></div>`).join('')}</div></div>`;
+      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><select class="swSettingsInput" id="swFlowSelect">${flowNames.map((flow,i)=>`<option value="${escapeHtml(flow)}" ${flow===swSettingsFlow?'selected':''}>序${i}　${escapeHtml(flow)}</option>`).join('')}</select><input class="swSettingsInput" id="swAddFlowTitle" placeholder="新增這個序號內的項目"><span></span><button class="swSettingsSave" data-sw-add="flows">新增</button></div><div class="swSettingsList">${(config.flows[swSettingsFlow]||[]).map((title,i)=>`<div class="swSettingsRow" data-index="${i}"><button class="swDragHandle" type="button" draggable="true" title="按住拖曳排序">☰</button><span>${escapeHtml(swSettingsFlow)}</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(title)}"><span></span><button class="swSettingsSave" data-sw-save="flows">儲存</button><button class="swSettingsDelete" data-sw-delete="flows">刪除</button></div>`).join('')}</div></div>`;
     }else if(swSettingsTab==='weekly'){
-      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><select class="swSettingsInput" id="swAddWeeklyDay">${swDayOptions(new Date().getDay())}</select><input class="swSettingsInput" id="swAddWeeklyTitle" placeholder="新增固定提醒"><input class="swSettingsInput" id="swAddWeeklyBadge" placeholder="時間／標籤"><button class="swSettingsSave" data-sw-add="weekly">新增</button></div><div class="swSettingsList">${config.weekly.map((item,i)=>`<div class="swSettingsRow" data-index="${i}"><select class="swSettingsInput" data-field="day">${swDayOptions(item.day)}</select><input class="swSettingsInput" data-field="title" value="${escapeHtml(item.title)}"><input class="swSettingsInput" data-field="badge" value="${escapeHtml(item.badge||'')}"><button class="swSettingsSave" data-sw-save="weekly">儲存</button><button class="swSettingsDelete" data-sw-delete="weekly">刪除</button></div>`).join('')}</div></div>`;
+      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><select class="swSettingsInput" id="swAddWeeklyDay">${swDayOptions(new Date().getDay())}</select><input class="swSettingsInput" id="swAddWeeklyTitle" placeholder="新增固定提醒"><input class="swSettingsInput" id="swAddWeeklyBadge" placeholder="時間／標籤"><button class="swSettingsSave" data-sw-add="weekly">新增</button></div><div class="swSettingsList">${config.weekly.map((item,i)=>`<div class="swSettingsRow" data-index="${i}"><button class="swDragHandle" type="button" draggable="true" title="按住拖曳排序">☰</button><select class="swSettingsInput" data-field="day">${swDayOptions(item.day)}</select><input class="swSettingsInput" data-field="title" value="${escapeHtml(item.title)}"><input class="swSettingsInput" data-field="badge" value="${escapeHtml(item.badge||'')}"><button class="swSettingsSave" data-sw-save="weekly">儲存</button><button class="swSettingsDelete" data-sw-delete="weekly">刪除</button></div>`).join('')}</div></div>`;
     }else{
-      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><span></span><input class="swSettingsInput" id="swAddMonthTitle" placeholder="新增月底／雙月項目"><span></span><button class="swSettingsSave" data-sw-add="month">新增</button></div><div class="swSettingsList">${config.month.map((title,i)=>`<div class="swSettingsRow" data-index="${i}"><span>月底／雙月</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(title)}"><span></span><button class="swSettingsSave" data-sw-save="month">儲存</button><button class="swSettingsDelete" data-sw-delete="month">刪除</button></div>`).join('')}</div></div>`;
+      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><span></span><input class="swSettingsInput" id="swAddMonthTitle" placeholder="新增月底／雙月項目"><span></span><button class="swSettingsSave" data-sw-add="month">新增</button></div><div class="swSettingsList">${config.month.map((title,i)=>`<div class="swSettingsRow" data-index="${i}"><button class="swDragHandle" type="button" draggable="true" title="按住拖曳排序">☰</button><span>月底／雙月</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(title)}"><span></span><button class="swSettingsSave" data-sw-save="month">儲存</button><button class="swSettingsDelete" data-sw-delete="month">刪除</button></div>`).join('')}</div></div>`;
     }
     bindShaoweiSettingsEvents();
   }
@@ -1601,6 +1611,32 @@
     if(!root)return;
     const flowSelect=document.getElementById('swFlowSelect');
     if(flowSelect)flowSelect.onchange=()=>{swSettingsFlow=flowSelect.value;renderShaoweiSettings();};
+    let draggedIndex=-1;
+    root.querySelectorAll('.swDragHandle').forEach(handle=>{
+      handle.ondragstart=e=>{
+        const row=handle.closest('.swSettingsRow');
+        draggedIndex=Number(row.dataset.index);
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed='move';
+        e.dataTransfer.setData('text/plain',String(draggedIndex));
+      };
+      handle.ondragend=()=>root.querySelectorAll('.swSettingsRow').forEach(row=>row.classList.remove('dragging','dragOver'));
+    });
+    root.querySelectorAll('.swSettingsRow').forEach(row=>{
+      row.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move';row.classList.add('dragOver');};
+      row.ondragleave=()=>row.classList.remove('dragOver');
+      row.ondrop=e=>{
+        e.preventDefault();
+        const targetIndex=Number(row.dataset.index);
+        if(draggedIndex<0||draggedIndex===targetIndex)return;
+        const config=loadShaoweiConfig();
+        const list=swSettingsTab==='flows'?config.flows[swSettingsFlow]:config[swSettingsTab];
+        if(!Array.isArray(list)||!list[draggedIndex])return;
+        const [moved]=list.splice(draggedIndex,1);
+        list.splice(targetIndex,0,moved);
+        commitShaoweiSettings(config,swSettingsTab,swSettingsFlow);
+      };
+    });
     root.querySelectorAll('[data-sw-add]').forEach(btn=>btn.onclick=()=>{
       const config=loadShaoweiConfig(),kind=btn.dataset.swAdd;
       if(kind==='today'){
