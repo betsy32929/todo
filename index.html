@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V88：所有日期為今天的非工作事項一律自動歸到首要 -->
+<!-- V89：紹薇模式改為今日工作流程／固定提醒版面 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V88</title>
+<title>麗卉待辦 V89</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -591,6 +591,44 @@
   }
   .memoLinkItem:hover{background:#e8f1ff;color:#1d4ed8;}
 
+  /* V89：紹薇模式只顯示新的每日工作流程版面，麗卉模式維持原樣 */
+  #shaoweiDailySection{display:none;}
+  body[data-profile="shaowei"] .page>section:not(:first-child):not(#shaoweiDailySection){display:none!important;}
+  body[data-profile="shaowei"] #shaoweiDailySection{display:block!important;}
+  .swDailyWrap{display:grid;gap:14px;padding:14px;}
+  .swTodayHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .swTodayTitle{font-size:22px;font-weight:950;color:#3f3f46;}
+  .swTodayDate{margin-top:3px;color:#71717a;font-size:13px;font-weight:800;}
+  .swOpenCount{display:inline-flex;align-items:center;gap:6px;border:1px solid #fecdd3;background:#fff1f2;color:#be123c;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:950;}
+  .swSection{border:1px solid #e4e4e7;border-radius:18px;background:#fff;overflow:hidden;}
+  .swSectionHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:11px 13px;background:#fafafa;border-bottom:1px solid #e4e4e7;}
+  .swSectionHead b{font-size:16px;color:#3f3f46;}
+  .swSectionHint{font-size:12px;color:#71717a;font-weight:800;}
+  .swTodayList{padding:3px 13px;}
+  .swEmpty{padding:18px;text-align:center;color:#a1a1aa;font-weight:800;}
+  .swTaskRow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;}
+  .swTaskRow:last-child{border-bottom:0;}
+  .swTaskRow input{width:18px;height:18px;accent-color:#7c3aed;}
+  .swTaskText{display:grid;gap:2px;min-width:0;}
+  .swTaskText strong{font-size:14px;color:#334155;overflow-wrap:anywhere;}
+  .swTaskText small{font-size:11px;color:#94a3b8;font-weight:800;}
+  .swTaskRow.done strong{text-decoration:line-through;color:#94a3b8;}
+  .swTaskBadge{border-radius:999px;background:#f1f5f9;color:#64748b;padding:4px 8px;font-size:11px;font-weight:900;white-space:nowrap;}
+  .swFlowGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px;}
+  .swFlowBtn{border:1px solid #d8dee9;background:#fff;color:#334155;border-radius:13px;padding:10px 8px;text-align:left;font-weight:950;cursor:pointer;min-height:44px;}
+  .swFlowBtn:hover{background:#f8fafc;}
+  .swFlowBtn.active{border-color:#a78bfa;background:#f5f3ff;color:#6d28d9;box-shadow:0 0 0 2px rgba(124,58,237,.08);}
+  .swFlowBtn small{display:block;margin-top:3px;color:#94a3b8;font-size:10px;font-weight:800;}
+  .swFixedGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;}
+  .swFixedBox{border:1px solid #e2e8f0;border-radius:14px;padding:10px 12px;background:#fcfcfd;}
+  .swFixedBox h4{margin:0 0 8px;font-size:14px;color:#475569;}
+  .swFixedLine{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;padding:6px 0;border-bottom:1px dashed #e2e8f0;font-size:12px;line-height:1.4;}
+  .swFixedLine:last-child{border-bottom:0;}
+  .swFixedDay{font-weight:950;color:#6d28d9;white-space:nowrap;}
+  .swMonthList{padding:3px 13px;}
+  @media(max-width:760px){.swFlowGrid{grid-template-columns:repeat(2,minmax(0,1fr));}.swFixedGrid{grid-template-columns:1fr;}}
+  @media(max-width:460px){.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swFlowGrid{grid-template-columns:1fr 1fr;}}
+
 </style>
 </head>
 <body>
@@ -599,7 +637,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V88</span>
+        <span class="pageTitleText">待辦清單 V89</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -607,6 +645,59 @@
             <button id="switchShaowei" class="profileBtn" type="button">紹薇</button>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="shaoweiDailySection">
+    <div class="swDailyWrap">
+      <div class="swTodayHead">
+        <div>
+          <div class="swTodayTitle">紹薇｜今天要做</div>
+          <div class="swTodayDate" id="swTodayDate"></div>
+        </div>
+        <div class="swOpenCount">尚未完成 <span id="swOpenCount">0</span></div>
+      </div>
+
+      <div class="swSection">
+        <div class="swSectionHead"><b>今日清單</b><span class="swSectionHint">固定提醒自動出現；案件流程有需要才加入</span></div>
+        <div class="swTodayList" id="swTodayList"></div>
+      </div>
+
+      <div class="swSection">
+        <div class="swSectionHead"><b>今天有什麼案件？</b><span class="swSectionHint">再按一次可移除整組</span></div>
+        <div class="swFlowGrid" id="swFlowGrid">
+          <button class="swFlowBtn" type="button" data-sw-flow="旁件">序0　旁件<small>旁1／旁2／旁3</small></button>
+          <button class="swFlowBtn" type="button" data-sw-flow="NEW本">序1　NEW本<small>審核・房管・製作</small></button>
+          <button class="swFlowBtn" type="button" data-sw-flow="成交">序2　成交<small>PO・業績・出款</small></button>
+          <button class="swFlowBtn" type="button" data-sw-flow="M夾">序3　M夾<small>簡訊・紙條・回報</small></button>
+          <button class="swFlowBtn" type="button" data-sw-flow="D夾">序4　D夾<small>房管・製作D夾</small></button>
+          <button class="swFlowBtn" type="button" data-sw-flow="作廢">序5　作廢<small>房管・作廢後續</small></button>
+          <button class="swFlowBtn" type="button" data-sw-flow="下架">序6　下架<small>房管・網站・櫥窗</small></button>
+          <button class="swFlowBtn" type="button" data-sw-flow="PO網">序7　PO網<small>591・5168・其他</small></button>
+        </div>
+      </div>
+
+      <div class="swSection">
+        <div class="swSectionHead"><b>固定提醒</b><span class="swSectionHint">到指定星期會自動加入今日清單</span></div>
+        <div class="swFixedGrid">
+          <div class="swFixedBox">
+            <h4>每週</h4>
+            <div class="swFixedLine"><span class="swFixedDay">星期一</span><span>小米監視器備份<br>開會早餐／投影機／筆電／成交粉卡／白板筆／更新白板數字／開會影片</span></div>
+            <div class="swFixedLine"><span class="swFixedDay">星期二</span><span>09:00 提醒宇育團看<br>15:00 整理團看</span></div>
+            <div class="swFixedLine"><span class="swFixedDay">星期三</span><span>08:00 團看列印／注意鑰匙<br>繳款水電費</span></div>
+            <div class="swFixedLine"><span class="swFixedDay">星期五</span><span>13:00 提醒成交業務開會早餐<br>14:00 開發獎勵／業績結算／介紹獎金<br>15:00 開會PPT製作完成<br>每月大會準備</span></div>
+          </div>
+          <div class="swFixedBox">
+            <h4>每天</h4>
+            <div class="swFixedLine"><span class="swFixedDay">16:50</span><span>提醒值班</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="swSection">
+        <div class="swSectionHead"><b>月底／雙月</b><span class="swSectionHint" id="swMonthHint"></span></div>
+        <div class="swMonthList" id="swMonthList"></div>
       </div>
     </div>
   </section>
@@ -953,7 +1044,6 @@
   let state = { tasks: [], memo: '', todoNote: '' };
   let supabaseClient = null;
   let remoteSaveTimer = null;
-  let remotePollTimer = null;
   let remoteChannel = null;
   let remoteLoadFinished = false;
   let syncEnabled = false;
@@ -1229,6 +1319,110 @@
     return 'todo_v22_shared';
   }
 
+  const SHAOWEI_DAILY_KEY = 'todo_shaowei_daily_v89';
+  const SHAOWEI_FLOW_TEMPLATES = {
+    '旁件':['旁1／旁2／旁3'],
+    'NEW本':['王總審核','房管','開會PPT','格局圖／動畫','鑰匙標籤製作、歸檔鎖櫃','NEW本ALL','物件影片製作'],
+    '成交':['PO臉書－成交','報業績','申請出款','簽約COPY','製作成交'],
+    'M夾':['傳簡訊','紙條列印／回報金流','黃單／粉單','製作M夾','退斡EK回報','EK作廢回報'],
+    'D夾':['房管','製作D夾'],
+    '作廢':['房管','作廢後續'],
+    '下架':['到期物件下架','房管／總表下架','櫥窗下架','591下架','LED下架'],
+    'PO網':['591','5168','其他網站']
+  };
+  const SHAOWEI_WEEKLY_ITEMS = {
+    1:[['小米監視器備份','星期一'],['開會早餐／投影機／筆電／成交粉卡／白板筆／更新白板數字／開會影片','星期一']],
+    2:[['提醒宇育團看','09:00'],['整理團看','15:00']],
+    3:[['團看列印／注意鑰匙','08:00'],['繳款水電費','星期三']],
+    5:[['提醒成交業務開會早餐','13:00'],['開發獎勵／業績結算／介紹獎金','14:00'],['開會PPT製作完成','15:00'],['每月大會（生日紅包／業績獎狀）','星期五']]
+  };
+  const SHAOWEI_MONTH_ITEMS = [
+    '物件本K','物件CK','鑰匙櫃CK','單據：先KEY文字，圖片連結','謄本命名、歸檔',
+    '核對房管、總表、各網站數量','歸檔、碎紙、封背歸檔','ScanHui資料夾歸檔清空',
+    'Scan2資料夾歸檔清空','scan資料夾歸檔清空','中1百超','中1交帳'
+  ];
+  function shaoweiLocalDateKey(d=new Date()){
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function shaoweiMonthKey(d=new Date()){
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+  function loadShaoweiDailyState(){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(SHAOWEI_DAILY_KEY)||'{}');
+      return parsed&&typeof parsed==='object'?parsed:{};
+    }catch(e){return {};}
+  }
+  function saveShaoweiDailyState(data){
+    try{localStorage.setItem(SHAOWEI_DAILY_KEY,JSON.stringify(data));}catch(e){}
+  }
+  function shaoweiTodayItems(dayState){
+    const now=new Date();
+    const rows=[{key:'fixed|值班',title:'提醒值班',meta:'每天',badge:'16:50'}];
+    (SHAOWEI_WEEKLY_ITEMS[now.getDay()]||[]).forEach((it,i)=>rows.push({key:`weekly|${now.getDay()}|${i}`,title:it[0],meta:'固定提醒',badge:it[1]}));
+    (dayState.flows||[]).forEach(flow=>(SHAOWEI_FLOW_TEMPLATES[flow]||[]).forEach((title,i)=>rows.push({key:`flow|${flow}|${i}`,title,meta:`序${Object.keys(SHAOWEI_FLOW_TEMPLATES).indexOf(flow)}・${flow}`,badge:'今日'})));
+    return rows;
+  }
+  function renderShaoweiDailyBoard(){
+    const section=document.getElementById('shaoweiDailySection');
+    if(!section||!isShaowei())return;
+    const now=new Date();
+    const all=loadShaoweiDailyState();
+    const dayKey=shaoweiLocalDateKey(now);
+    const monthKey=shaoweiMonthKey(now);
+    const dayState=all[dayKey]&&typeof all[dayKey]==='object'?all[dayKey]:{flows:[],done:{}};
+    if(!Array.isArray(dayState.flows))dayState.flows=[];
+    if(!dayState.done||typeof dayState.done!=='object')dayState.done={};
+    all[dayKey]=dayState;
+    const monthState=all['month|'+monthKey]&&typeof all['month|'+monthKey]==='object'?all['month|'+monthKey]:{done:{}};
+    if(!monthState.done||typeof monthState.done!=='object')monthState.done={};
+    all['month|'+monthKey]=monthState;
+    const weekNames='日一二三四五六';
+    const dateEl=document.getElementById('swTodayDate');
+    if(dateEl)dateEl.textContent=`${now.getFullYear()-1911}年${now.getMonth()+1}月${now.getDate()}日　星期${weekNames[now.getDay()]}`;
+    document.querySelectorAll('[data-sw-flow]').forEach(btn=>{
+      const active=dayState.flows.includes(btn.dataset.swFlow||'');
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-pressed',active?'true':'false');
+    });
+    const rows=shaoweiTodayItems(dayState);
+    const list=document.getElementById('swTodayList');
+    if(list){
+      list.innerHTML=rows.length?rows.map(row=>`<label class="swTaskRow ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.meta)}</small></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span></label>`).join(''):'<div class="swEmpty">今天尚未加入案件流程</div>';
+      list.querySelectorAll('[data-sw-done]').forEach(box=>box.onchange=()=>{
+        dayState.done[box.dataset.swDone]=box.checked;
+        saveShaoweiDailyState(all);
+        renderShaoweiDailyBoard();
+      });
+    }
+    const openCount=document.getElementById('swOpenCount');
+    if(openCount)openCount.textContent=String(rows.filter(row=>!dayState.done[row.key]).length);
+    const monthHint=document.getElementById('swMonthHint');
+    if(monthHint)monthHint.textContent=`${now.getMonth()+1}月${(now.getMonth()+1)%2===0?'｜雙月':''}`;
+    const monthList=document.getElementById('swMonthList');
+    if(monthList){
+      monthList.innerHTML=SHAOWEI_MONTH_ITEMS.map((title,i)=>`<label class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong><small>月底／雙月</small></span><span class="swTaskBadge">本月</span></label>`).join('');
+      monthList.querySelectorAll('[data-sw-month]').forEach(box=>box.onchange=()=>{
+        monthState.done[box.dataset.swMonth]=box.checked;
+        saveShaoweiDailyState(all);
+        renderShaoweiDailyBoard();
+      });
+    }
+    saveShaoweiDailyState(all);
+  }
+  function toggleShaoweiFlow(flow){
+    if(!SHAOWEI_FLOW_TEMPLATES[flow])return;
+    const all=loadShaoweiDailyState();
+    const dayKey=shaoweiLocalDateKey();
+    const dayState=all[dayKey]&&typeof all[dayKey]==='object'?all[dayKey]:{flows:[],done:{}};
+    if(!Array.isArray(dayState.flows))dayState.flows=[];
+    const idx=dayState.flows.indexOf(flow);
+    if(idx>=0)dayState.flows.splice(idx,1);else dayState.flows.push(flow);
+    all[dayKey]=dayState;
+    saveShaoweiDailyState(all);
+    renderShaoweiDailyBoard();
+  }
+
   function applyProfileUI(){
     document.body.dataset.profile = currentProfile;
     if(els.switchLihui) els.switchLihui.classList.toggle('active', currentProfile === 'lihui');
@@ -1283,6 +1477,7 @@
       els.midOneTaskBtn.classList.toggle('active', active);
       els.midOneTaskBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
+    if(isShaowei())renderShaoweiDailyBoard();
   }
   async function switchProfile(profileKey){
     const next = profileKey === 'shaowei' ? 'shaowei' : 'lihui';
@@ -1294,6 +1489,8 @@
     editingId = '';
     occurrenceEditContext = null;
     bindStateFromProfile();
+    // V89：記住最後使用的身分，重新整理後仍停留在紹薇新版面。
+    saveAppStateLocally();
     clearForm();
     loadMemo();
     loadHandoffMemo();
@@ -3703,23 +3900,10 @@
   }
 
 
-  function stopRemotePolling(){
-    if(remotePollTimer){ clearInterval(remotePollTimer); remotePollTimer = null; }
-  }
-
   function stopRemoteSubscription(){
     if(!remoteChannel || !supabaseClient) { remoteChannel = null; return; }
     try{ supabaseClient.removeChannel(remoteChannel); }catch(err){ console.error('Supabase 即時監聽移除失敗', err); }
     remoteChannel = null;
-  }
-
-  function startRemotePolling(){
-    stopRemotePolling();
-    stopRemoteSubscription();
-    if(!syncEnabled || !supabaseClient) return;
-    remotePollTimer = setInterval(() => {
-      Promise.all([loadFromSupabase(false), loadSharedFromSupabase(false)]).then(([a,b]) => { if(a || b) renderAll(); });
-    }, 2500);
   }
 
   function startRemoteSubscription(){
@@ -4014,7 +4198,6 @@
     const sharedLoaded = await loadSharedFromSupabase(true);
     ensureRecurringTasksForToday();
     renderAll();
-    startRemotePolling();
     startRemoteSubscription();
     if((loaded || sharedLoaded) && !lastSupabaseErrorDetail){
       updateSupabaseStatus('已連線（即時同步中）');
@@ -4027,9 +4210,9 @@
     els.supabaseUrlInput.value = '';
     els.supabaseKeyInput.value = '';
     localStorage.removeItem(SUPABASE_KEY);
+    stopRemoteSubscription();
     supabaseClient = null;
     syncEnabled = false;
-    stopRemotePolling();
     lastRemoteUpdatedAt = '';
     lastSharedRemoteUpdatedAt = '';
     updateSupabaseStatus('預設隱藏');
@@ -4056,7 +4239,6 @@
 
   function disconnectSupabase(){
     syncEnabled = false;
-    stopRemotePolling();
     stopRemoteSubscription();
     updateSupabaseStatus('已中斷');
     setSupabaseErrorDetail('');
@@ -4263,6 +4445,7 @@
   if(sharedMemoBox) sharedMemoBox.addEventListener('input', saveSharedMemo);
   if(els.switchLihui) els.switchLihui.addEventListener('click', () => { switchProfile('lihui'); });
   if(els.switchShaowei) els.switchShaowei.addEventListener('click', () => { switchProfile('shaowei'); });
+  document.querySelectorAll('[data-sw-flow]').forEach(btn=>btn.addEventListener('click',()=>toggleShaoweiFlow(btn.dataset.swFlow||'')));
   els.btnConnect.addEventListener('click', connectSupabase);
   els.btnSync.addEventListener('click', syncNow);
   els.btnDisconnect.addEventListener('click', disconnectSupabase);
@@ -4346,7 +4529,6 @@
       if(els.supabaseStatusText) els.supabaseStatusText.textContent = '已自動連線雲端即時同步。';
       await loadFromSupabase();
       await loadSharedFromSupabase();
-      startRemotePolling();
       startRemoteSubscription();
       return true;
     }catch(err){
