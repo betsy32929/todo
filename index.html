@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V95：移除麗卉待辦輸入上方的記事區塊 -->
+<!-- V96：修正重複母項目誤標完成時，行事曆有顯示但待辦清單漏項 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V95</title>
+<title>麗卉待辦 V96</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -643,7 +643,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V95</span>
+        <span class="pageTitleText">待辦清單 V96</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -2133,7 +2133,13 @@
     let changed = false;
 
     list.forEach(t => {
-      if(t.done || !t.repeatEnabled || !t.repeatType || !t.dueDate || t.autoSpawnedFrom) return;
+      if(!t.repeatEnabled || !t.repeatType || !t.dueDate || t.autoSpawnedFrom) return;
+      // 重複母項目只由「啟用中／已停用」控制；舊資料若誤留 done=true，
+      // 行事曆仍會預覽，但過去會阻止本次事項進入待辦清單。
+      if(t.done){
+        t.done = false;
+        changed = true;
+      }
       const relevantOccurrence = getLatestOccurrenceOnOrBefore(t, referenceKey);
       if(!relevantOccurrence) return;
       const triggerDate = triggerMode === 'day_before' ? addDays(toDate(relevantOccurrence), -1) : toDate(relevantOccurrence);
