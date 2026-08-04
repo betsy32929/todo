@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V93：月底／雙月清單移除重複分類與本月標籤 -->
+<!-- V94：今日與月底清單改三欄，記事與備忘錄文字簡化 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V93</title>
+<title>麗卉待辦 V94</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -611,7 +611,7 @@
   .swNotepadGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .swNotepadBox{width:100%;min-height:190px;resize:vertical;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#1e293b;padding:14px 15px;font-family:"Microsoft JhengHei","Noto Sans TC",Consolas,sans-serif;font-size:19px;font-weight:700;line-height:1.7;letter-spacing:.01em;outline:none;}
   .swNotepadBox:focus{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(124,58,237,.12);}
-  .swTodayList,.swMonthList{display:grid;grid-template-columns:1fr;gap:9px;padding:13px;}
+  .swTodayList,.swMonthList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:13px;}
   .swEmpty{grid-column:1/-1;padding:22px;text-align:center;color:#94a3b8;font-size:15px;font-weight:900;}
   .swTaskRow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;border:1px solid #e2e8f0;border-radius:15px;background:#fcfdff;min-width:0;box-shadow:0 3px 9px rgba(71,85,105,.05);}
   .swTaskRow input{width:21px;height:21px;margin-top:1px;accent-color:#7c3aed;}
@@ -631,9 +631,9 @@
   .swFixedLine{display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px dashed #dbe3ef;font-size:15px;line-height:1.55;color:#475569;}
   .swFixedLine:last-child{border-bottom:0;}
   .swFixedDay{font-size:15px;font-weight:950;color:#6d28d9;white-space:nowrap;}
-  @media(max-width:900px){.swFlowGrid{grid-template-columns:repeat(2,minmax(0,1fr));}.swFixedGrid{grid-template-columns:1fr;}}
+  @media(max-width:900px){.swTodayList,.swMonthList{grid-template-columns:repeat(2,minmax(0,1fr));}.swFlowGrid{grid-template-columns:repeat(2,minmax(0,1fr));}.swFixedGrid{grid-template-columns:1fr;}}
   @media(max-width:700px){.swNotepadGrid{grid-template-columns:1fr;}}
-  @media(max-width:560px){.swDailyWrap{padding:10px;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}}
+  @media(max-width:560px){.swDailyWrap{padding:10px;}.swTodayList,.swMonthList{grid-template-columns:1fr;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}}
 
 </style>
 </head>
@@ -643,7 +643,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V93</span>
+        <span class="pageTitleText">待辦清單 V94</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -660,8 +660,8 @@
       <div class="swNotepad">
         <div class="swNotepadHead"><b>記事本</b><span>自動儲存・每天保留內容</span></div>
         <div class="swNotepadGrid">
-          <textarea id="swDailyMemoBox" class="swNotepadBox" placeholder="左欄記事……"></textarea>
-          <textarea id="swDailyMemoBox2" class="swNotepadBox" placeholder="右欄記事……"></textarea>
+          <textarea id="swDailyMemoBox" class="swNotepadBox" placeholder="隨時記錄事情……"></textarea>
+          <textarea id="swDailyMemoBox2" class="swNotepadBox" placeholder="隨時記錄事情……"></textarea>
         </div>
       </div>
 
@@ -891,7 +891,7 @@
 
   <section class="card" id="sharedMemoCard">
     <div class="cardHead">
-      <span>共同備忘錄</span>
+      <span>備忘錄</span>
       <span class="statusText">麗卉／紹薇共用｜自動記憶</span>
     </div>
     <div class="cardBody">
@@ -4307,7 +4307,7 @@
     const box = getSharedMemoBox();
     sharedState.sharedMemo = box ? (box.value || '') : '';
     renderUrlPreview(box, 'sharedMemoLinkPreview');
-    persistShared({ statusText: '共同備忘錄已儲存' });
+    persistShared({ statusText: '備忘錄已儲存' });
   }
 
   els.dateInput.addEventListener('blur', () => { validateDateInput(); });
