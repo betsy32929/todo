@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V97：今日事項改為展開後逐項加入今日清單 -->
+<!-- V98：新增事項設定，可自行管理今日清單、今日事項、固定提醒與月底雙月 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V97</title>
+<title>麗卉待辦 V98</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -630,6 +630,19 @@
   .swFlowChoice{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:12px;padding:11px 12px;text-align:left;font-size:16px;font-weight:900;cursor:pointer;}
   .swFlowChoice:hover{border-color:#a78bfa;background:#f5f3ff;}
   .swFlowChoice.selected{border-color:#8b5cf6;background:#ede9fe;color:#6d28d9;}
+  .swSettingsBtn{border:1px solid #a78bfa;background:#f5f3ff;color:#6d28d9;border-radius:12px;padding:8px 12px;font-size:15px;font-weight:950;cursor:pointer;}
+  .swSettingsModal{width:min(980px,calc(100vw - 24px));max-height:90vh;overflow:auto;}
+  .swSettingsTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0;}
+  .swSettingsTab{border:1px solid #cbd5e1;background:#f8fafc;border-radius:12px;padding:10px;font-size:15px;font-weight:900;cursor:pointer;}
+  .swSettingsTab.active{background:#ede9fe;border-color:#8b5cf6;color:#6d28d9;}
+  .swSettingsPanel{display:none;}
+  .swSettingsPanel.active{display:block;}
+  .swSettingsAdd{display:grid;grid-template-columns:150px minmax(0,1fr) 150px auto;gap:8px;margin-bottom:10px;}
+  .swSettingsList{display:grid;gap:8px;}
+  .swSettingsRow{display:grid;grid-template-columns:150px minmax(0,1fr) 150px auto auto;gap:8px;align-items:center;padding:9px;border:1px solid #e2e8f0;border-radius:13px;background:#fff;}
+  .swSettingsInput{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:9px 10px;font-size:15px;}
+  .swSettingsSave,.swSettingsDelete{border:0;border-radius:10px;padding:9px 11px;font-size:14px;font-weight:900;cursor:pointer;}
+  .swSettingsSave{background:#e0f2fe;color:#075985;}.swSettingsDelete{background:#fee2e2;color:#b91c1c;}
   .swFixedGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;}
   .swFixedBox{border:1px solid #dbeafe;border-radius:17px;padding:13px 14px;background:#fbfdff;}
   .swFixedBox h4{margin:0 0 10px;font-size:18px;color:#334155;}
@@ -639,7 +652,7 @@
   .swFixedDay{font-size:15px;font-weight:950;color:#6d28d9;white-space:nowrap;}
   @media(max-width:900px){.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:repeat(2,minmax(0,1fr));}.swFlowGrid{grid-template-columns:repeat(2,minmax(0,1fr));}.swFixedGrid{grid-template-columns:1fr;}}
   @media(max-width:700px){.swNotepadGrid{grid-template-columns:1fr;}}
-  @media(max-width:560px){.swDailyWrap{padding:10px;}.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:1fr;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}}
+  @media(max-width:560px){.swDailyWrap{padding:10px;}.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:1fr;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}.swSettingsTabs{grid-template-columns:1fr 1fr}.swSettingsAdd,.swSettingsRow{grid-template-columns:1fr}.swSettingsModal{max-height:94vh}}
 
 </style>
 </head>
@@ -649,7 +662,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V97</span>
+        <span class="pageTitleText">待辦清單 V98</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -684,7 +697,7 @@
       </div>
 
       <div class="swSection">
-        <div class="swSectionHead"><b>今日事項</b><span class="swSectionHint">先點序號展開，再點需要的單項加入今日清單</span></div>
+        <div class="swSectionHead"><b>今日事項</b><span class="swSectionHint">先點序號展開，再點需要的單項加入今日清單</span><button class="swSettingsBtn" id="swSettingsOpen" type="button">⚙ 事項設定</button></div>
         <div class="swFlowGrid" id="swFlowGrid">
           <button class="swFlowBtn" type="button" data-sw-flow="旁件">序0　旁件<small>旁1／旁2／旁3</small></button>
           <button class="swFlowBtn" type="button" data-sw-flow="NEW本">序1　NEW本<small>審核・房管・製作</small></button>
@@ -703,14 +716,11 @@
         <div class="swFixedGrid">
           <div class="swFixedBox">
             <h4>每週</h4>
-            <div class="swFixedLine" data-sw-weekday="1"><span class="swFixedDay">星期一</span><span>小米監視器備份<br>開會早餐／投影機／筆電／成交粉卡／白板筆／更新白板數字／開會影片</span></div>
-            <div class="swFixedLine" data-sw-weekday="2"><span class="swFixedDay">星期二</span><span>09:00 提醒宇育團看<br>15:00 整理團看</span></div>
-            <div class="swFixedLine" data-sw-weekday="3"><span class="swFixedDay">星期三</span><span>08:00 團看列印／注意鑰匙<br>繳款水電費</span></div>
-            <div class="swFixedLine" data-sw-weekday="5"><span class="swFixedDay">星期五</span><span>13:00 提醒成交業務開會早餐<br>14:00 開發獎勵／業績結算／介紹獎金<br>15:00 開會PPT製作完成<br>每月大會準備</span></div>
+            <div id="swWeeklyDisplay"></div>
           </div>
           <div class="swFixedBox">
             <h4>每天</h4>
-            <div class="swFixedLine"><span class="swFixedDay">16:50</span><span>提醒值班</span></div>
+            <div id="swDailyDisplay"></div>
           </div>
         </div>
       </div>
@@ -905,6 +915,22 @@
       <textarea id="sharedMemoBox" class="memoBox sharedMemoBox" placeholder=""></textarea>
     </div>
   </section>
+</div>
+
+<div id="swSettingsOverlay" class="modalOverlay" aria-hidden="true">
+  <div class="modalCard swSettingsModal" role="dialog" aria-modal="true" aria-labelledby="swSettingsTitle">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div id="swSettingsTitle" class="modalTitle" style="margin:0;">事項設定</div>
+      <button id="swSettingsClose" class="modalBtn soft" type="button" style="padding:8px 14px;">關閉</button>
+    </div>
+    <div class="swSettingsTabs">
+      <button class="swSettingsTab active" data-sw-settings-tab="today" type="button">今日清單</button>
+      <button class="swSettingsTab" data-sw-settings-tab="flows" type="button">今日事項</button>
+      <button class="swSettingsTab" data-sw-settings-tab="weekly" type="button">固定提醒</button>
+      <button class="swSettingsTab" data-sw-settings-tab="month" type="button">月底／雙月</button>
+    </div>
+    <div id="swSettingsContent"></div>
+  </div>
 </div>
 
 <div id="recurringModal" class="modalOverlay" aria-hidden="true">
@@ -1340,6 +1366,7 @@
   }
 
   const SHAOWEI_DAILY_KEY = 'todo_shaowei_daily_v89';
+  const SHAOWEI_CONFIG_KEY = 'todo_shaowei_config_v98';
   const SHAOWEI_FLOW_TEMPLATES = {
     '旁件':['旁1','旁2','旁3'],
     'NEW本':['王總審核','房管','開會PPT','格局圖／動畫','鑰匙標籤製作、歸檔鎖櫃','NEW本ALL','物件影片製作'],
@@ -1361,6 +1388,30 @@
     '核對房管、總表、各網站數量','歸檔、碎紙、封背歸檔','ScanHui資料夾歸檔清空',
     'Scan2資料夾歸檔清空','scan資料夾歸檔清空','中1百超','中1交帳'
   ];
+  function defaultShaoweiConfig(){
+    return {
+      today:[{title:'提醒值班',badge:'16:50'}],
+      flows:Object.fromEntries(Object.entries(SHAOWEI_FLOW_TEMPLATES).map(([key,items])=>[key,[...items]])),
+      weekly:Object.entries(SHAOWEI_WEEKLY_ITEMS).flatMap(([day,items])=>items.map(item=>({day:Number(day),title:item[0],badge:item[1]}))),
+      month:[...SHAOWEI_MONTH_ITEMS]
+    };
+  }
+  function loadShaoweiConfig(){
+    const fallback=defaultShaoweiConfig();
+    try{
+      const saved=JSON.parse(localStorage.getItem(SHAOWEI_CONFIG_KEY)||'null');
+      if(!saved||typeof saved!=='object')return fallback;
+      return {
+        today:Array.isArray(saved.today)?saved.today:fallback.today,
+        flows:saved.flows&&typeof saved.flows==='object'?saved.flows:fallback.flows,
+        weekly:Array.isArray(saved.weekly)?saved.weekly:fallback.weekly,
+        month:Array.isArray(saved.month)?saved.month:fallback.month
+      };
+    }catch(e){return fallback;}
+  }
+  function saveShaoweiConfig(config){
+    try{localStorage.setItem(SHAOWEI_CONFIG_KEY,JSON.stringify(config));}catch(e){}
+  }
   function shaoweiLocalDateKey(d=new Date()){
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
@@ -1378,11 +1429,13 @@
   }
   function shaoweiTodayItems(dayState){
     const now=new Date();
-    const rows=[{key:'fixed|值班',title:'提醒值班',meta:'每天',badge:'16:50'}];
-    (SHAOWEI_WEEKLY_ITEMS[now.getDay()]||[]).forEach((it,i)=>rows.push({key:`weekly|${now.getDay()}|${i}`,title:it[0],meta:'固定提醒',badge:it[1]}));
-    Object.entries(SHAOWEI_FLOW_TEMPLATES).forEach(([flow,titles])=>titles.forEach((title,i)=>{
+    const config=loadShaoweiConfig();
+    const rows=[];
+    config.today.forEach((item,i)=>rows.push({key:`fixed|today|${i}`,title:item.title,meta:'每天',badge:item.badge||'今日'}));
+    config.weekly.filter(item=>Number(item.day)===now.getDay()).forEach((item,i)=>rows.push({key:`weekly|${now.getDay()}|${i}`,title:item.title,meta:'固定提醒',badge:item.badge||`星期${'日一二三四五六'[now.getDay()]}`}));
+    Object.entries(config.flows).forEach(([flow,titles])=>titles.forEach((title,i)=>{
       const key=`flow|${flow}|${i}`;
-      if((dayState.selectedItems||[]).includes(key))rows.push({key,title,meta:`序${Object.keys(SHAOWEI_FLOW_TEMPLATES).indexOf(flow)}・${flow}`,badge:'今日'});
+      if((dayState.selectedItems||[]).includes(key))rows.push({key,title,meta:`序${Object.keys(config.flows).indexOf(flow)}・${flow}`,badge:'今日'});
     }));
     return rows;
   }
@@ -1394,6 +1447,7 @@
     const memoBox2=document.getElementById('swDailyMemoBox2');
     if(memoBox2&&document.activeElement!==memoBox2&&memoBox2.value!==String(state.handoffMemo||''))memoBox2.value=String(state.handoffMemo||'');
     const now=new Date();
+    const config=loadShaoweiConfig();
     const all=loadShaoweiDailyState();
     const dayKey=shaoweiLocalDateKey(now);
     const monthKey=shaoweiMonthKey(now);
@@ -1422,7 +1476,7 @@
     const choices=document.getElementById('swFlowChoices');
     if(choices){
       const flow=dayState.openFlow;
-      const titles=SHAOWEI_FLOW_TEMPLATES[flow]||[];
+      const titles=config.flows[flow]||[];
       choices.classList.toggle('show',!!flow);
       choices.innerHTML=titles.map((title,i)=>{
         const key=`flow|${flow}|${i}`;
@@ -1443,11 +1497,24 @@
     }
     const openCount=document.getElementById('swOpenCount');
     if(openCount)openCount.textContent=String(rows.filter(row=>!dayState.done[row.key]).length);
+    const dayNames=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+    const weeklyDisplay=document.getElementById('swWeeklyDisplay');
+    if(weeklyDisplay){
+      const grouped=new Map();
+      config.weekly.forEach(item=>{
+        const day=Number(item.day);
+        if(!grouped.has(day))grouped.set(day,[]);
+        grouped.get(day).push(item);
+      });
+      weeklyDisplay.innerHTML=[...grouped.entries()].sort((a,b)=>a[0]-b[0]).map(([day,items])=>`<div class="swFixedLine ${day===now.getDay()?'today':''}" data-sw-weekday="${day}"><span class="swFixedDay">${dayNames[day]||''}</span><span>${items.map(item=>`${item.badge&&item.badge!==dayNames[day]?escapeHtml(item.badge)+' ':''}${escapeHtml(item.title)}`).join('<br>')}</span></div>`).join('');
+    }
+    const dailyDisplay=document.getElementById('swDailyDisplay');
+    if(dailyDisplay)dailyDisplay.innerHTML=config.today.map(item=>`<div class="swFixedLine"><span class="swFixedDay">${escapeHtml(item.badge||'每天')}</span><span>${escapeHtml(item.title)}</span></div>`).join('');
     const monthHint=document.getElementById('swMonthHint');
     if(monthHint)monthHint.textContent=`${now.getMonth()+1}月${(now.getMonth()+1)%2===0?'｜雙月':''}`;
     const monthList=document.getElementById('swMonthList');
     if(monthList){
-      monthList.innerHTML=SHAOWEI_MONTH_ITEMS.map((title,i)=>`<label class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong></span></label>`).join('');
+      monthList.innerHTML=config.month.map((title,i)=>`<label class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong></span></label>`).join('');
       monthList.querySelectorAll('[data-sw-month]').forEach(box=>box.onchange=()=>{
         monthState.done[box.dataset.swMonth]=box.checked;
         saveShaoweiDailyState(all);
@@ -1457,7 +1524,7 @@
     saveShaoweiDailyState(all);
   }
   function toggleShaoweiFlow(flow){
-    if(!SHAOWEI_FLOW_TEMPLATES[flow])return;
+    if(!loadShaoweiConfig().flows[flow])return;
     const all=loadShaoweiDailyState();
     const dayKey=shaoweiLocalDateKey();
     const dayState=all[dayKey]&&typeof all[dayKey]==='object'?all[dayKey]:{flows:[],done:{}};
@@ -1482,6 +1549,92 @@
     all[dayKey]=dayState;
     saveShaoweiDailyState(all);
     renderShaoweiDailyBoard();
+  }
+  let swSettingsTab='today';
+  let swSettingsFlow='旁件';
+  function resetShaoweiConfiguredState(kind,flow=''){
+    const all=loadShaoweiDailyState();
+    Object.entries(all).forEach(([stateKey,entry])=>{
+      if(!entry||typeof entry!=='object')return;
+      if(kind==='flow'&&Array.isArray(entry.selectedItems))entry.selectedItems=entry.selectedItems.filter(key=>!key.startsWith(`flow|${flow}|`));
+      if(kind==='today'&&entry.done)Object.keys(entry.done).filter(key=>key.startsWith('fixed|today|')).forEach(key=>delete entry.done[key]);
+      if(kind==='weekly'&&entry.done)Object.keys(entry.done).filter(key=>key.startsWith('weekly|')).forEach(key=>delete entry.done[key]);
+      if(kind==='month'&&stateKey.startsWith('month|')&&entry.done)entry.done={};
+    });
+    saveShaoweiDailyState(all);
+  }
+  function swDayOptions(selected=1){
+    return ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'].map((name,day)=>`<option value="${day}" ${Number(selected)===day?'selected':''}>${name}</option>`).join('');
+  }
+  function renderShaoweiSettings(){
+    const root=document.getElementById('swSettingsContent');
+    if(!root)return;
+    const config=loadShaoweiConfig();
+    document.querySelectorAll('[data-sw-settings-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.swSettingsTab===swSettingsTab));
+    if(swSettingsTab==='today'){
+      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><span></span><input class="swSettingsInput" id="swAddTodayTitle" placeholder="新增今日清單項目"><input class="swSettingsInput" id="swAddTodayBadge" placeholder="時間／標籤"><button class="swSettingsSave" data-sw-add="today">新增</button></div><div class="swSettingsList">${config.today.map((item,i)=>`<div class="swSettingsRow" data-index="${i}"><span>每天顯示</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(item.title)}"><input class="swSettingsInput" data-field="badge" value="${escapeHtml(item.badge||'')}"><button class="swSettingsSave" data-sw-save="today">儲存</button><button class="swSettingsDelete" data-sw-delete="today">刪除</button></div>`).join('')}</div></div>`;
+    }else if(swSettingsTab==='flows'){
+      const flowNames=Object.keys(config.flows);
+      if(!config.flows[swSettingsFlow])swSettingsFlow=flowNames[0]||'';
+      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><select class="swSettingsInput" id="swFlowSelect">${flowNames.map((flow,i)=>`<option value="${escapeHtml(flow)}" ${flow===swSettingsFlow?'selected':''}>序${i}　${escapeHtml(flow)}</option>`).join('')}</select><input class="swSettingsInput" id="swAddFlowTitle" placeholder="新增這個序號內的項目"><span></span><button class="swSettingsSave" data-sw-add="flows">新增</button></div><div class="swSettingsList">${(config.flows[swSettingsFlow]||[]).map((title,i)=>`<div class="swSettingsRow" data-index="${i}"><span>${escapeHtml(swSettingsFlow)}</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(title)}"><span></span><button class="swSettingsSave" data-sw-save="flows">儲存</button><button class="swSettingsDelete" data-sw-delete="flows">刪除</button></div>`).join('')}</div></div>`;
+    }else if(swSettingsTab==='weekly'){
+      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><select class="swSettingsInput" id="swAddWeeklyDay">${swDayOptions(new Date().getDay())}</select><input class="swSettingsInput" id="swAddWeeklyTitle" placeholder="新增固定提醒"><input class="swSettingsInput" id="swAddWeeklyBadge" placeholder="時間／標籤"><button class="swSettingsSave" data-sw-add="weekly">新增</button></div><div class="swSettingsList">${config.weekly.map((item,i)=>`<div class="swSettingsRow" data-index="${i}"><select class="swSettingsInput" data-field="day">${swDayOptions(item.day)}</select><input class="swSettingsInput" data-field="title" value="${escapeHtml(item.title)}"><input class="swSettingsInput" data-field="badge" value="${escapeHtml(item.badge||'')}"><button class="swSettingsSave" data-sw-save="weekly">儲存</button><button class="swSettingsDelete" data-sw-delete="weekly">刪除</button></div>`).join('')}</div></div>`;
+    }else{
+      root.innerHTML=`<div class="swSettingsPanel active"><div class="swSettingsAdd"><span></span><input class="swSettingsInput" id="swAddMonthTitle" placeholder="新增月底／雙月項目"><span></span><button class="swSettingsSave" data-sw-add="month">新增</button></div><div class="swSettingsList">${config.month.map((title,i)=>`<div class="swSettingsRow" data-index="${i}"><span>月底／雙月</span><input class="swSettingsInput" data-field="title" value="${escapeHtml(title)}"><span></span><button class="swSettingsSave" data-sw-save="month">儲存</button><button class="swSettingsDelete" data-sw-delete="month">刪除</button></div>`).join('')}</div></div>`;
+    }
+    bindShaoweiSettingsEvents();
+  }
+  function commitShaoweiSettings(config,kind,flow=''){
+    saveShaoweiConfig(config);
+    resetShaoweiConfiguredState(kind,flow);
+    renderShaoweiSettings();
+    renderShaoweiDailyBoard();
+  }
+  function bindShaoweiSettingsEvents(){
+    const root=document.getElementById('swSettingsContent');
+    if(!root)return;
+    const flowSelect=document.getElementById('swFlowSelect');
+    if(flowSelect)flowSelect.onchange=()=>{swSettingsFlow=flowSelect.value;renderShaoweiSettings();};
+    root.querySelectorAll('[data-sw-add]').forEach(btn=>btn.onclick=()=>{
+      const config=loadShaoweiConfig(),kind=btn.dataset.swAdd;
+      if(kind==='today'){
+        const title=document.getElementById('swAddTodayTitle').value.trim();if(!title)return;
+        config.today.push({title,badge:document.getElementById('swAddTodayBadge').value.trim()});
+      }else if(kind==='flows'){
+        const title=document.getElementById('swAddFlowTitle').value.trim();if(!title)return;
+        config.flows[swSettingsFlow].push(title);
+      }else if(kind==='weekly'){
+        const title=document.getElementById('swAddWeeklyTitle').value.trim();if(!title)return;
+        config.weekly.push({day:Number(document.getElementById('swAddWeeklyDay').value),title,badge:document.getElementById('swAddWeeklyBadge').value.trim()});
+      }else{
+        const title=document.getElementById('swAddMonthTitle').value.trim();if(!title)return;
+        config.month.push(title);
+      }
+      commitShaoweiSettings(config,kind,swSettingsFlow);
+    });
+    root.querySelectorAll('[data-sw-save]').forEach(btn=>btn.onclick=()=>{
+      const row=btn.closest('.swSettingsRow'),index=Number(row.dataset.index),kind=btn.dataset.swSave,config=loadShaoweiConfig();
+      const title=row.querySelector('[data-field="title"]').value.trim();if(!title)return;
+      if(kind==='today')config.today[index]={title,badge:row.querySelector('[data-field="badge"]').value.trim()};
+      else if(kind==='flows')config.flows[swSettingsFlow][index]=title;
+      else if(kind==='weekly')config.weekly[index]={day:Number(row.querySelector('[data-field="day"]').value),title,badge:row.querySelector('[data-field="badge"]').value.trim()};
+      else config.month[index]=title;
+      commitShaoweiSettings(config,kind,swSettingsFlow);
+    });
+    root.querySelectorAll('[data-sw-delete]').forEach(btn=>btn.onclick=()=>{
+      const row=btn.closest('.swSettingsRow'),index=Number(row.dataset.index),kind=btn.dataset.swDelete,config=loadShaoweiConfig();
+      if(!confirm('確定刪除這個項目？'))return;
+      if(kind==='today')config.today.splice(index,1);else if(kind==='flows')config.flows[swSettingsFlow].splice(index,1);else if(kind==='weekly')config.weekly.splice(index,1);else config.month.splice(index,1);
+      commitShaoweiSettings(config,kind,swSettingsFlow);
+    });
+  }
+  function openShaoweiSettings(){
+    const overlay=document.getElementById('swSettingsOverlay');if(!overlay)return;
+    renderShaoweiSettings();overlay.classList.add('show');overlay.setAttribute('aria-hidden','false');
+  }
+  function closeShaoweiSettings(){
+    const overlay=document.getElementById('swSettingsOverlay');if(!overlay)return;
+    overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');
   }
 
   function applyProfileUI(){
@@ -4513,6 +4666,13 @@
   if(els.switchLihui) els.switchLihui.addEventListener('click', () => { switchProfile('lihui'); });
   if(els.switchShaowei) els.switchShaowei.addEventListener('click', () => { switchProfile('shaowei'); });
   document.querySelectorAll('[data-sw-flow]').forEach(btn=>btn.addEventListener('click',()=>toggleShaoweiFlow(btn.dataset.swFlow||'')));
+  const swSettingsOpen=document.getElementById('swSettingsOpen');
+  const swSettingsClose=document.getElementById('swSettingsClose');
+  const swSettingsOverlay=document.getElementById('swSettingsOverlay');
+  if(swSettingsOpen)swSettingsOpen.addEventListener('click',openShaoweiSettings);
+  if(swSettingsClose)swSettingsClose.addEventListener('click',closeShaoweiSettings);
+  if(swSettingsOverlay)swSettingsOverlay.addEventListener('click',e=>{if(e.target===swSettingsOverlay)closeShaoweiSettings();});
+  document.querySelectorAll('[data-sw-settings-tab]').forEach(btn=>btn.addEventListener('click',()=>{swSettingsTab=btn.dataset.swSettingsTab||'today';renderShaoweiSettings();}));
   const swDailyMemoBox=document.getElementById('swDailyMemoBox');
   if(swDailyMemoBox)swDailyMemoBox.addEventListener('input',()=>{
     state.memo=swDailyMemoBox.value||'';
