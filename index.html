@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V92：記事本改為兩欄，右上角紹薇改稱事項 -->
+<!-- V93：月底／雙月清單移除重複分類與本月標籤 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V92</title>
+<title>麗卉待辦 V93</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -643,7 +643,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V92</span>
+        <span class="pageTitleText">待辦清單 V93</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -1418,7 +1418,7 @@
     if(monthHint)monthHint.textContent=`${now.getMonth()+1}月${(now.getMonth()+1)%2===0?'｜雙月':''}`;
     const monthList=document.getElementById('swMonthList');
     if(monthList){
-      monthList.innerHTML=SHAOWEI_MONTH_ITEMS.map((title,i)=>`<label class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong><small>月底／雙月</small></span><span class="swTaskBadge">本月</span></label>`).join('');
+      monthList.innerHTML=SHAOWEI_MONTH_ITEMS.map((title,i)=>`<label class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong></span></label>`).join('');
       monthList.querySelectorAll('[data-sw-month]').forEach(box=>box.onchange=()=>{
         monthState.done[box.dataset.swMonth]=box.checked;
         saveShaoweiDailyState(all);
