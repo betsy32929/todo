@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V100：事項設定支援拖曳排序，設定按鈕移至今日清單未完成數旁 -->
+<!-- V101：今日事項加入清單後可直接從今日清單刪除並重新選取 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V100</title>
+<title>麗卉待辦 V101</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -614,6 +614,7 @@
   .swTodayList,.swMonthList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:13px;}
   .swEmpty{grid-column:1/-1;padding:22px;text-align:center;color:#94a3b8;font-size:15px;font-weight:900;}
   .swTaskRow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;border:1px solid #e2e8f0;border-radius:15px;background:#fcfdff;min-width:0;box-shadow:0 3px 9px rgba(71,85,105,.05);}
+  .swTaskRow.hasRemove{grid-template-columns:auto minmax(0,1fr) auto auto;}
   .swTaskRow input{width:21px;height:21px;margin-top:1px;accent-color:#7c3aed;}
   .swTaskText{display:grid;gap:2px;min-width:0;}
   .swTaskText strong{font-size:16px;line-height:1.45;color:#334155;overflow-wrap:anywhere;}
@@ -622,6 +623,8 @@
   .swMonthNote:focus{border-bottom-color:#8b5cf6!important;box-shadow:none!important;}
   .swTaskRow.done strong{text-decoration:line-through;color:#94a3b8;}
   .swTaskBadge{border-radius:999px;background:#ede9fe;color:#6d28d9;padding:5px 9px;font-size:12px;font-weight:950;white-space:nowrap;}
+  .swTodayRemove{border:1px solid #fecaca;background:#fff1f2;color:#be123c;border-radius:9px;padding:5px 8px;font-size:13px;font-weight:950;cursor:pointer;white-space:nowrap;}
+  .swTodayRemove:hover{background:#ffe4e6;}
   .swFlowGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px;}
   .swFlowBtn{border:1px solid #cbd5e1;background:linear-gradient(180deg,#fff,#f8fafc);color:#334155;border-radius:15px;padding:12px 11px;text-align:left;font-size:16px;font-weight:950;cursor:pointer;min-height:58px;box-shadow:0 3px 9px rgba(71,85,105,.05);}
   .swFlowBtn:hover{background:#f5f3ff;border-color:#c4b5fd;}
@@ -667,7 +670,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V100</span>
+        <span class="pageTitleText">待辦清單 V101</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -1500,9 +1503,16 @@
     const rows=shaoweiTodayItems(dayState);
     const list=document.getElementById('swTodayList');
     if(list){
-      list.innerHTML=rows.length?rows.map(row=>`<label class="swTaskRow ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.meta)}</small></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span></label>`).join(''):'<div class="swEmpty">今天尚未加入案件流程</div>';
+      list.innerHTML=rows.length?rows.map(row=>`<div class="swTaskRow ${row.key.startsWith('flow|')?'hasRemove':''} ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.meta)}</small></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span>${row.key.startsWith('flow|')?`<button class="swTodayRemove" type="button" data-sw-remove="${escapeHtml(row.key)}">刪</button>`:''}</div>`).join(''):'<div class="swEmpty">今天尚未加入案件流程</div>';
       list.querySelectorAll('[data-sw-done]').forEach(box=>box.onchange=()=>{
         dayState.done[box.dataset.swDone]=box.checked;
+        saveShaoweiDailyState(all);
+        renderShaoweiDailyBoard();
+      });
+      list.querySelectorAll('[data-sw-remove]').forEach(btn=>btn.onclick=()=>{
+        const key=btn.dataset.swRemove;
+        dayState.selectedItems=dayState.selectedItems.filter(itemKey=>itemKey!==key);
+        delete dayState.done[key];
         saveShaoweiDailyState(all);
         renderShaoweiDailyBoard();
       });
