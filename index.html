@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V98：新增事項設定，可自行管理今日清單、今日事項、固定提醒與月底雙月 -->
+<!-- V99：今日清單依時間排序，三欄採橫向 123／456 順序 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V98</title>
+<title>麗卉待辦 V99</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -662,7 +662,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V98</span>
+        <span class="pageTitleText">待辦清單 V99</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -1437,7 +1437,13 @@
       const key=`flow|${flow}|${i}`;
       if((dayState.selectedItems||[]).includes(key))rows.push({key,title,meta:`序${Object.keys(config.flows).indexOf(flow)}・${flow}`,badge:'今日'});
     }));
-    return rows;
+    return rows.map((row,index)=>({...row,_originalOrder:index})).sort((a,b)=>{
+      const timeValue=row=>{
+        const match=String(row.badge||'').match(/(?:^|\s)([01]?\d|2[0-3]):([0-5]\d)(?:\s|$)/);
+        return match?Number(match[1])*60+Number(match[2]):Number.POSITIVE_INFINITY;
+      };
+      return timeValue(a)-timeValue(b)||a._originalOrder-b._originalOrder;
+    });
   }
   function renderShaoweiDailyBoard(){
     const section=document.getElementById('shaoweiDailySection');
