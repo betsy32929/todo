@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V102：月底雙月項目下方備註輸入提示改為備註欄 -->
+<!-- V103：修正設定拖曳，今日事項可跨日保留，月底備註提示改藍色 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V102</title>
+<title>麗卉待辦 V103</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -614,17 +614,20 @@
   .swTodayList,.swMonthList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:13px;}
   .swEmpty{grid-column:1/-1;padding:22px;text-align:center;color:#94a3b8;font-size:15px;font-weight:900;}
   .swTaskRow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;border:1px solid #e2e8f0;border-radius:15px;background:#fcfdff;min-width:0;box-shadow:0 3px 9px rgba(71,85,105,.05);}
-  .swTaskRow.hasRemove{grid-template-columns:auto minmax(0,1fr) auto auto;}
+  .swTaskRow.hasRemove{grid-template-columns:auto minmax(0,1fr) auto auto auto;}
   .swTaskRow input{width:21px;height:21px;margin-top:1px;accent-color:#7c3aed;}
   .swTaskText{display:grid;gap:2px;min-width:0;}
   .swTaskText strong{font-size:16px;line-height:1.45;color:#334155;overflow-wrap:anywhere;}
   .swTaskText small{font-size:13px;line-height:1.35;color:#94a3b8;font-weight:900;}
-  .swMonthNote{width:100%!important;height:30px!important;margin:3px 0 0!important;padding:4px 7px!important;border:0!important;border-bottom:1px solid #cbd5e1!important;border-radius:0!important;background:transparent!important;color:#64748b;font-size:13px!important;outline:none;}
+  .swMonthNote{width:100%!important;height:30px!important;margin:3px 0 0!important;padding:4px 7px!important;border:0!important;border-bottom:1px solid #93c5fd!important;border-radius:0!important;background:transparent!important;color:#2563eb!important;font-size:13px!important;outline:none;}
+  .swMonthNote::placeholder{color:#2563eb;opacity:1;}
   .swMonthNote:focus{border-bottom-color:#8b5cf6!important;box-shadow:none!important;}
   .swTaskRow.done strong{text-decoration:line-through;color:#94a3b8;}
   .swTaskBadge{border-radius:999px;background:#ede9fe;color:#6d28d9;padding:5px 9px;font-size:12px;font-weight:950;white-space:nowrap;}
   .swTodayRemove{border:1px solid #fecaca;background:#fff1f2;color:#be123c;border-radius:9px;padding:5px 8px;font-size:13px;font-weight:950;cursor:pointer;white-space:nowrap;}
   .swTodayRemove:hover{background:#ffe4e6;}
+  .swTodayKeep{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:9px;padding:5px 8px;font-size:13px;font-weight:950;cursor:pointer;white-space:nowrap;}
+  .swTodayKeep.active{border-color:#3b82f6;background:#dbeafe;color:#1e40af;}
   .swFlowGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px;}
   .swFlowBtn{border:1px solid #cbd5e1;background:linear-gradient(180deg,#fff,#f8fafc);color:#334155;border-radius:15px;padding:12px 11px;text-align:left;font-size:16px;font-weight:950;cursor:pointer;min-height:58px;box-shadow:0 3px 9px rgba(71,85,105,.05);}
   .swFlowBtn:hover{background:#f5f3ff;border-color:#c4b5fd;}
@@ -646,7 +649,7 @@
   .swSettingsList{display:grid;gap:8px;}
   .swSettingsRow{display:grid;grid-template-columns:42px 140px minmax(0,1fr) 150px auto auto;gap:8px;align-items:center;padding:9px;border:1px solid #e2e8f0;border-radius:13px;background:#fff;}
   .swSettingsRow.dragging{opacity:.5;border-color:#8b5cf6;}.swSettingsRow.dragOver{box-shadow:inset 0 3px 0 #8b5cf6;}
-  .swDragHandle{width:38px;height:38px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;color:#64748b;font-size:22px;line-height:1;font-weight:900;cursor:grab;display:flex;align-items:center;justify-content:center;}
+  .swDragHandle{width:38px;height:38px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;color:#64748b;font-size:22px;line-height:1;font-weight:900;cursor:grab;display:flex;align-items:center;justify-content:center;touch-action:none;}
   .swDragHandle:active{cursor:grabbing;}
   .swSettingsInput{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:9px 10px;font-size:15px;}
   .swSettingsSave,.swSettingsDelete{border:0;border-radius:10px;padding:9px 11px;font-size:14px;font-weight:900;cursor:pointer;}
@@ -670,7 +673,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V102</span>
+        <span class="pageTitleText">待辦清單 V103</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -1435,7 +1438,7 @@
   function saveShaoweiDailyState(data){
     try{localStorage.setItem(SHAOWEI_DAILY_KEY,JSON.stringify(data));}catch(e){}
   }
-  function shaoweiTodayItems(dayState){
+  function shaoweiTodayItems(dayState,retainedItems=[]){
     const now=new Date();
     const config=loadShaoweiConfig();
     const rows=[];
@@ -1443,7 +1446,9 @@
     config.weekly.filter(item=>Number(item.day)===now.getDay()).forEach((item,i)=>rows.push({key:`weekly|${now.getDay()}|${i}`,title:item.title,meta:'固定提醒',badge:item.badge||`星期${'日一二三四五六'[now.getDay()]}`}));
     Object.entries(config.flows).forEach(([flow,titles])=>titles.forEach((title,i)=>{
       const key=`flow|${flow}|${i}`;
-      if((dayState.selectedItems||[]).includes(key))rows.push({key,title,meta:`序${Object.keys(config.flows).indexOf(flow)}・${flow}`,badge:'今日'});
+      const selected=(dayState.selectedItems||[]).includes(key);
+      const retained=retainedItems.includes(key);
+      if(selected||retained)rows.push({key,title,meta:`序${Object.keys(config.flows).indexOf(flow)}・${flow}`,badge:retained?'保留':'今日',retained});
     }));
     return rows.map((row,index)=>({...row,_originalOrder:index})).sort((a,b)=>{
       const timeValue=row=>{
@@ -1463,6 +1468,7 @@
     const now=new Date();
     const config=loadShaoweiConfig();
     const all=loadShaoweiDailyState();
+    if(!Array.isArray(all.__retained))all.__retained=[];
     const dayKey=shaoweiLocalDateKey(now);
     const monthKey=shaoweiMonthKey(now);
     const dayState=all[dayKey]&&typeof all[dayKey]==='object'?all[dayKey]:{flows:[],done:{}};
@@ -1495,23 +1501,32 @@
       choices.classList.toggle('show',!!flow);
       choices.innerHTML=titles.map((title,i)=>{
         const key=`flow|${flow}|${i}`;
-        const selected=dayState.selectedItems.includes(key);
+        const selected=dayState.selectedItems.includes(key)||all.__retained.includes(key);
         return `<button class="swFlowChoice ${selected?'selected':''}" type="button" data-sw-item="${escapeHtml(key)}">${selected?'✓ 已加入　':'＋ 加入　'}${escapeHtml(title)}</button>`;
       }).join('');
       choices.querySelectorAll('[data-sw-item]').forEach(btn=>btn.onclick=()=>toggleShaoweiFlowItem(btn.dataset.swItem||''));
     }
-    const rows=shaoweiTodayItems(dayState);
+    const rows=shaoweiTodayItems(dayState,all.__retained);
     const list=document.getElementById('swTodayList');
     if(list){
-      list.innerHTML=rows.length?rows.map(row=>`<div class="swTaskRow ${row.key.startsWith('flow|')?'hasRemove':''} ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.meta)}</small></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span>${row.key.startsWith('flow|')?`<button class="swTodayRemove" type="button" data-sw-remove="${escapeHtml(row.key)}">刪</button>`:''}</div>`).join(''):'<div class="swEmpty">今天尚未加入案件流程</div>';
+      list.innerHTML=rows.length?rows.map(row=>`<div class="swTaskRow ${row.key.startsWith('flow|')?'hasRemove':''} ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.meta)}</small></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span>${row.key.startsWith('flow|')?`<button class="swTodayKeep ${row.retained?'active':''}" type="button" data-sw-keep="${escapeHtml(row.key)}">保</button><button class="swTodayRemove" type="button" data-sw-remove="${escapeHtml(row.key)}">刪</button>`:''}</div>`).join(''):'<div class="swEmpty">今天尚未加入案件流程</div>';
       list.querySelectorAll('[data-sw-done]').forEach(box=>box.onchange=()=>{
         dayState.done[box.dataset.swDone]=box.checked;
+        if(box.checked)all.__retained=all.__retained.filter(key=>key!==box.dataset.swDone);
+        saveShaoweiDailyState(all);
+        renderShaoweiDailyBoard();
+      });
+      list.querySelectorAll('[data-sw-keep]').forEach(btn=>btn.onclick=()=>{
+        const key=btn.dataset.swKeep;
+        if(all.__retained.includes(key))all.__retained=all.__retained.filter(itemKey=>itemKey!==key);
+        else all.__retained.push(key);
         saveShaoweiDailyState(all);
         renderShaoweiDailyBoard();
       });
       list.querySelectorAll('[data-sw-remove]').forEach(btn=>btn.onclick=()=>{
         const key=btn.dataset.swRemove;
         dayState.selectedItems=dayState.selectedItems.filter(itemKey=>itemKey!==key);
+        all.__retained=all.__retained.filter(itemKey=>itemKey!==key);
         delete dayState.done[key];
         saveShaoweiDailyState(all);
         renderShaoweiDailyBoard();
@@ -1580,6 +1595,7 @@
   let swSettingsFlow='旁件';
   function resetShaoweiConfiguredState(kind,flow=''){
     const all=loadShaoweiDailyState();
+    if(kind==='flow'&&Array.isArray(all.__retained))all.__retained=all.__retained.filter(key=>!key.startsWith(`flow|${flow}|`));
     Object.entries(all).forEach(([stateKey,entry])=>{
       if(!entry||typeof entry!=='object')return;
       if(kind==='flow'&&Array.isArray(entry.selectedItems))entry.selectedItems=entry.selectedItems.filter(key=>!key.startsWith(`flow|${flow}|`));
@@ -1616,36 +1632,61 @@
     renderShaoweiSettings();
     renderShaoweiDailyBoard();
   }
+  function moveShaoweiSetting(fromIndex,targetIndex){
+    const config=loadShaoweiConfig();
+    const list=swSettingsTab==='flows'?config.flows[swSettingsFlow]:config[swSettingsTab];
+    if(!Array.isArray(list)||fromIndex<0||targetIndex<0||fromIndex===targetIndex||fromIndex>=list.length||targetIndex>=list.length)return;
+    const oldIndexes=list.map((item,index)=>index);
+    const [moved]=list.splice(fromIndex,1);
+    const [movedOldIndex]=oldIndexes.splice(fromIndex,1);
+    list.splice(targetIndex,0,moved);
+    oldIndexes.splice(targetIndex,0,movedOldIndex);
+    if(swSettingsTab==='flows'){
+      const all=loadShaoweiDailyState();
+      const remapKey=key=>{
+        const prefix=`flow|${swSettingsFlow}|`;
+        if(!key.startsWith(prefix))return key;
+        const oldIndex=Number(key.slice(prefix.length));
+        const newIndex=oldIndexes.indexOf(oldIndex);
+        return newIndex>=0?`${prefix}${newIndex}`:key;
+      };
+      Object.values(all).forEach(entry=>{if(entry&&Array.isArray(entry.selectedItems))entry.selectedItems=entry.selectedItems.map(remapKey);});
+      if(Array.isArray(all.__retained))all.__retained=all.__retained.map(remapKey);
+      saveShaoweiDailyState(all);
+      saveShaoweiConfig(config);
+      renderShaoweiSettings();
+      renderShaoweiDailyBoard();
+    }else commitShaoweiSettings(config,swSettingsTab,swSettingsFlow);
+  }
   function bindShaoweiSettingsEvents(){
     const root=document.getElementById('swSettingsContent');
     if(!root)return;
     const flowSelect=document.getElementById('swFlowSelect');
     if(flowSelect)flowSelect.onchange=()=>{swSettingsFlow=flowSelect.value;renderShaoweiSettings();};
-    let draggedIndex=-1;
+    let draggedIndex=-1,dragTargetIndex=-1;
     root.querySelectorAll('.swDragHandle').forEach(handle=>{
-      handle.ondragstart=e=>{
+      handle.onpointerdown=e=>{
+        e.preventDefault();
         const row=handle.closest('.swSettingsRow');
         draggedIndex=Number(row.dataset.index);
+        dragTargetIndex=draggedIndex;
         row.classList.add('dragging');
-        e.dataTransfer.effectAllowed='move';
-        e.dataTransfer.setData('text/plain',String(draggedIndex));
+        handle.setPointerCapture(e.pointerId);
       };
-      handle.ondragend=()=>root.querySelectorAll('.swSettingsRow').forEach(row=>row.classList.remove('dragging','dragOver'));
-    });
-    root.querySelectorAll('.swSettingsRow').forEach(row=>{
-      row.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move';row.classList.add('dragOver');};
-      row.ondragleave=()=>row.classList.remove('dragOver');
-      row.ondrop=e=>{
-        e.preventDefault();
-        const targetIndex=Number(row.dataset.index);
-        if(draggedIndex<0||draggedIndex===targetIndex)return;
-        const config=loadShaoweiConfig();
-        const list=swSettingsTab==='flows'?config.flows[swSettingsFlow]:config[swSettingsTab];
-        if(!Array.isArray(list)||!list[draggedIndex])return;
-        const [moved]=list.splice(draggedIndex,1);
-        list.splice(targetIndex,0,moved);
-        commitShaoweiSettings(config,swSettingsTab,swSettingsFlow);
+      handle.onpointermove=e=>{
+        if(draggedIndex<0)return;
+        const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.swSettingsRow');
+        root.querySelectorAll('.swSettingsRow').forEach(row=>row.classList.remove('dragOver'));
+        if(target&&root.contains(target)){dragTargetIndex=Number(target.dataset.index);target.classList.add('dragOver');}
       };
+      handle.onpointerup=e=>{
+        if(handle.hasPointerCapture(e.pointerId))handle.releasePointerCapture(e.pointerId);
+        root.querySelectorAll('.swSettingsRow').forEach(row=>row.classList.remove('dragging','dragOver'));
+        const from=draggedIndex,to=dragTargetIndex;
+        draggedIndex=-1;dragTargetIndex=-1;
+        moveShaoweiSetting(from,to);
+      };
+      handle.onpointercancel=()=>{draggedIndex=-1;dragTargetIndex=-1;root.querySelectorAll('.swSettingsRow').forEach(row=>row.classList.remove('dragging','dragOver'));};
     });
     root.querySelectorAll('[data-sw-add]').forEach(btn=>btn.onclick=()=>{
       const config=loadShaoweiConfig(),kind=btn.dataset.swAdd;
