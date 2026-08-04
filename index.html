@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V94：今日與月底清單改三欄，記事與備忘錄文字簡化 -->
+<!-- V95：移除麗卉待辦輸入上方的記事區塊 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V94</title>
+<title>麗卉待辦 V95</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -643,7 +643,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V94</span>
+        <span class="pageTitleText">待辦清單 V95</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉完整版模式</span>
           <div class="profileSwitch">
@@ -764,7 +764,7 @@
   </section>
 
 
-  <section class="card">
+  <section class="card" id="lihuiMemoCard" style="display:none;">
     <div class="cardHead"><span>記事</span><span class="statusText">兩區自動記憶</span></div>
     <div class="cardBody">
       <div class="memoDualGrid">
