@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V104：麗卉與事項合併單頁，新增今日清單備註與備註顏色狀態 -->
+<!-- V105：月底／雙月備註永久保留，勾選狀態每月自動重設 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V104</title>
+<title>麗卉待辦 V105</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -667,6 +667,8 @@
   .unifiedFold[open] .foldArrow{transform:rotate(90deg);}
   #unifiedTodoNoteCard #todoNoteWrap{margin-top:0!important;}
   #unifiedTodoNoteCard #todoNoteWrap>div:first-child{display:none;}
+  .supabaseHead,.calendarCard .cardHead{min-height:34px!important;padding:5px 14px!important;}
+  .calendarCard .calendarTools .btn{padding:6px 10px!important;border-radius:11px!important;font-size:13px!important;}
   @media(max-width:900px){.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:repeat(2,minmax(0,1fr));}.swFlowGrid{grid-template-columns:repeat(2,minmax(0,1fr));}.swFixedGrid{grid-template-columns:1fr;}}
   @media(max-width:700px){.swNotepadGrid{grid-template-columns:1fr;}}
   @media(max-width:560px){.swDailyWrap{padding:10px;}.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:1fr;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}.swSettingsTabs{grid-template-columns:1fr 1fr}.swSettingsAdd,.swSettingsRow{grid-template-columns:1fr}.swSettingsModal{max-height:94vh}}
@@ -679,7 +681,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V104</span>
+        <span class="pageTitleText">待辦清單 V105</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉＋事項</span>
         </div>
@@ -1494,7 +1496,15 @@
     all[dayKey]=dayState;
     const monthState=all['month|'+monthKey]&&typeof all['month|'+monthKey]==='object'?all['month|'+monthKey]:{done:{}};
     if(!monthState.done||typeof monthState.done!=='object')monthState.done={};
-    if(!monthState.notes||typeof monthState.notes!=='object')monthState.notes={};
+    if(!all.__monthNotes||typeof all.__monthNotes!=='object'){
+      all.__monthNotes={};
+      Object.keys(all).filter(key=>key.startsWith('month|')).sort().reverse().forEach(key=>{
+        const legacyNotes=all[key]&&typeof all[key].notes==='object'?all[key].notes:{};
+        Object.entries(legacyNotes).forEach(([index,value])=>{
+          if(all.__monthNotes[index]===undefined&&String(value||'').trim()) all.__monthNotes[index]=String(value);
+        });
+      });
+    }
     all['month|'+monthKey]=monthState;
     const weekNames='日一二三四五六';
     const dateEl=document.getElementById('swTodayDate');
@@ -1567,14 +1577,14 @@
     if(monthHint)monthHint.textContent=`${now.getMonth()+1}月${(now.getMonth()+1)%2===0?'｜雙月':''}`;
     const monthList=document.getElementById('swMonthList');
     if(monthList){
-      monthList.innerHTML=config.month.map((title,i)=>`<div class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong><input class="swMonthNote" type="text" data-sw-month-note="${i}" value="${escapeHtml(monthState.notes[i]||'')}" placeholder="備註欄"></span></div>`).join('');
+      monthList.innerHTML=config.month.map((title,i)=>`<div class="swTaskRow ${monthState.done[i]?'done':''}"><input type="checkbox" data-sw-month="${i}" ${monthState.done[i]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(title)}</strong><input class="swMonthNote" type="text" data-sw-month-note="${i}" value="${escapeHtml(all.__monthNotes[i]||'')}" placeholder="備註欄"></span></div>`).join('');
       monthList.querySelectorAll('[data-sw-month]').forEach(box=>box.onchange=()=>{
         monthState.done[box.dataset.swMonth]=box.checked;
         saveShaoweiDailyState(all);
         renderShaoweiDailyBoard();
       });
       monthList.querySelectorAll('[data-sw-month-note]').forEach(input=>input.oninput=()=>{
-        monthState.notes[input.dataset.swMonthNote]=input.value;
+        all.__monthNotes[input.dataset.swMonthNote]=input.value;
         saveShaoweiDailyState(all);
       });
     }
@@ -1617,7 +1627,7 @@
       if(kind==='flow'&&Array.isArray(entry.selectedItems))entry.selectedItems=entry.selectedItems.filter(key=>!key.startsWith(`flow|${flow}|`));
       if(kind==='today'&&entry.done)Object.keys(entry.done).filter(key=>key.startsWith('fixed|today|')).forEach(key=>delete entry.done[key]);
       if(kind==='weekly'&&entry.done)Object.keys(entry.done).filter(key=>key.startsWith('weekly|')).forEach(key=>delete entry.done[key]);
-      if(kind==='month'&&stateKey.startsWith('month|')){entry.done={};entry.notes={};}
+      if(kind==='month'&&stateKey.startsWith('month|')) entry.done={};
     });
     saveShaoweiDailyState(all);
   }
