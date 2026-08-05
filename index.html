@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V106：記事本預設顯示 8 行文字高度 -->
+<!-- V107：今日清單完成項目預設隱藏，可按鈕展開查看 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V106</title>
+<title>麗卉待辦 V107</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -609,6 +609,8 @@
   .swNotepadGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .swNotepadBox{width:100%;min-height:calc(8 * 1.7em + 28px);resize:vertical;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#1e293b;padding:14px 15px;font-family:"Microsoft JhengHei","Noto Sans TC",Consolas,sans-serif;font-size:19px;font-weight:700;line-height:1.7;letter-spacing:.01em;outline:none;}
   .swNotepadBox:focus{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+  .swCompletedToggle{margin-left:auto;border:1px solid #c4b5fd;border-radius:999px;background:#f5f3ff;color:#6d28d9;padding:6px 11px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;}
+  .swCompletedToggle.active{background:#7c3aed;color:#fff;border-color:#7c3aed;}
   .swTodayList,.swMonthList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:13px;}
   .swEmpty{grid-column:1/-1;padding:22px;text-align:center;color:#94a3b8;font-size:15px;font-weight:900;}
   .swTaskRow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;border:1px solid #e2e8f0;border-radius:15px;background:#fcfdff;min-width:0;box-shadow:0 3px 9px rgba(71,85,105,.05);}
@@ -681,7 +683,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V106</span>
+        <span class="pageTitleText">待辦清單 V107</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉＋事項</span>
         </div>
@@ -707,7 +709,7 @@
       </div>
 
       <div class="swSection" id="swTodayListSection">
-        <div class="swSectionHead"><b>今日清單</b><span class="swSectionHint">固定提醒自動出現；案件流程有需要才加入</span></div>
+        <div class="swSectionHead"><b>今日清單</b><span class="swSectionHint">固定提醒自動出現；案件流程有需要才加入</span><button class="swCompletedToggle" id="swCompletedToggle" type="button">顯示已完成</button></div>
         <div class="swTodayList" id="swTodayList"></div>
       </div>
 
@@ -1468,6 +1470,7 @@
       return timeValue(a)-timeValue(b)||a._originalOrder-b._originalOrder;
     });
   }
+  let swShowCompletedToday=false;
   function renderShaoweiDailyBoard(){
     const section=document.getElementById('shaoweiDailySection');
     if(!section&&!document.getElementById('swTodayListSection'))return;
@@ -1530,7 +1533,8 @@
     const rows=shaoweiTodayItems(dayState,all.__retained);
     const list=document.getElementById('swTodayList');
     if(list){
-      list.innerHTML=rows.length?rows.map(row=>`<div class="swTaskRow ${row.key.startsWith('flow|')?'hasRemove':''} ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.meta)}</small><input class="swTodayNote" type="text" data-sw-today-note="${escapeHtml(row.key)}" value="${escapeHtml(dayState.notes[row.key]||'')}" placeholder="備註欄"></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span>${row.key.startsWith('flow|')?`<button class="swTodayKeep ${row.retained?'active':''}" type="button" data-sw-keep="${escapeHtml(row.key)}">保</button><button class="swTodayRemove" type="button" data-sw-remove="${escapeHtml(row.key)}">刪</button>`:''}</div>`).join(''):'<div class="swEmpty">今天尚未加入案件流程</div>';
+      const visibleRows=swShowCompletedToday?rows:rows.filter(row=>!dayState.done[row.key]);
+      list.innerHTML=visibleRows.length?visibleRows.map(row=>`<div class="swTaskRow ${row.key.startsWith('flow|')?'hasRemove':''} ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.meta)}</small><input class="swTodayNote" type="text" data-sw-today-note="${escapeHtml(row.key)}" value="${escapeHtml(dayState.notes[row.key]||'')}" placeholder="備註欄"></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span>${row.key.startsWith('flow|')?`<button class="swTodayKeep ${row.retained?'active':''}" type="button" data-sw-keep="${escapeHtml(row.key)}">保</button><button class="swTodayRemove" type="button" data-sw-remove="${escapeHtml(row.key)}">刪</button>`:''}</div>`).join(''):`<div class="swEmpty">${rows.length?'今日項目已全部完成':'今天尚未加入案件流程'}</div>`;
       list.querySelectorAll('[data-sw-done]').forEach(box=>box.onchange=()=>{
         dayState.done[box.dataset.swDone]=box.checked;
         if(box.checked)all.__retained=all.__retained.filter(key=>key!==box.dataset.swDone);
@@ -1557,6 +1561,14 @@
         saveShaoweiDailyState(all);
         renderShaoweiDailyBoard();
       });
+    }
+    const completedCount=rows.filter(row=>dayState.done[row.key]).length;
+    const completedToggle=document.getElementById('swCompletedToggle');
+    if(completedToggle){
+      completedToggle.style.display=completedCount?'inline-flex':'none';
+      completedToggle.textContent=swShowCompletedToday?`隱藏已完成（${completedCount}）`:`顯示已完成（${completedCount}）`;
+      completedToggle.classList.toggle('active',swShowCompletedToday);
+      completedToggle.onclick=()=>{swShowCompletedToday=!swShowCompletedToday;renderShaoweiDailyBoard();};
     }
     const openCount=document.getElementById('swOpenCount');
     if(openCount)openCount.textContent=String(rows.filter(row=>!dayState.done[row.key]).length);
