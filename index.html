@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V107：今日清單完成項目預設隱藏，可按鈕展開查看 -->
+<!-- V108：每天重複任務先補齊今天，再建立提前顯示的下一次 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V107</title>
+<title>麗卉待辦 V108</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -683,7 +683,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V107</span>
+        <span class="pageTitleText">待辦清單 V108</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉＋事項</span>
         </div>
@@ -2505,13 +2505,20 @@
       }
       const relevantOccurrence = getLatestOccurrenceOnOrBefore(t, referenceKey);
       if(!relevantOccurrence) return;
-      const triggerDate = triggerMode === 'day_before' ? addDays(toDate(relevantOccurrence), -1) : toDate(relevantOccurrence);
-      if(today() < triggerDate) return;
-      const exists = list.some(x => x.autoSpawnedFrom === t.id && (x.occurrenceOriginalDate || x.dueDate) === relevantOccurrence);
-      if(!exists){
-        createOccurrenceInstanceInList(list, t, relevantOccurrence, groupName);
-        changed = true;
-      }
+      const occurrences=[relevantOccurrence];
+      const todayOccurrence=getLatestOccurrenceOnOrBefore(t,todayStr());
+      // 每天／每 1 天的任務可能同時有「今天」與「明天」。若前一天沒開程式，
+      // 只取明天會跳過今天，所以先補齊今天，再保留原本提前一天顯示下一次的規則。
+      if(todayOccurrence===todayStr()&&!occurrences.includes(todayOccurrence))occurrences.unshift(todayOccurrence);
+      occurrences.forEach(occurrenceDate=>{
+        const triggerDate=triggerMode==='day_before'?addDays(toDate(occurrenceDate),-1):toDate(occurrenceDate);
+        if(today()<triggerDate)return;
+        const exists=list.some(x=>x.autoSpawnedFrom===t.id&&(x.occurrenceOriginalDate||x.dueDate)===occurrenceDate);
+        if(!exists){
+          createOccurrenceInstanceInList(list,t,occurrenceDate,groupName);
+          changed=true;
+        }
+      });
     });
 
     return changed;
