@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V109：記事本兩欄改由主要雲端資料同步，並保留舊同步資料相容 -->
+<!-- V110：緊急停止記事本雲端覆寫，保護各裝置現有本機內容 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V109</title>
+<title>麗卉待辦 V110</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -683,7 +683,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V109</span>
+        <span class="pageTitleText">待辦清單 V110</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉＋事項</span>
         </div>
@@ -1121,7 +1121,6 @@
   let editingMidOneId = '';
   let lastSharedRemoteUpdatedAt = '';
   let lastShaoweiRemoteUpdatedAt = '';
-  let hasMainNotepadCloudFields = false;
   let lastSupabaseErrorDetail = '';
   let mainDatePicker = null;
 
@@ -4412,7 +4411,7 @@
     if(!supabaseClient || !syncEnabled || isApplyingRemote) return false;
     const payload = {
       app_name: getRemoteAppName(),
-      state_json: { tasks: state.tasks || [], handoffMemo: getHandoffMemoBox() ? (getHandoffMemoBox().value || '') : '', todoNote: getProfileTodoNoteBox() ? (getProfileTodoNoteBox().value || '') : '', todoSchedule: state.todoSchedule || getLihuiTodoSchedule(), notepadMemo: document.getElementById('swDailyMemoBox') ? (document.getElementById('swDailyMemoBox').value || '') : '', notepadMemo2: document.getElementById('swDailyMemoBox2') ? (document.getElementById('swDailyMemoBox2').value || '') : '' },
+      state_json: { tasks: state.tasks || [], handoffMemo: getHandoffMemoBox() ? (getHandoffMemoBox().value || '') : '', todoNote: getProfileTodoNoteBox() ? (getProfileTodoNoteBox().value || '') : '', todoSchedule: state.todoSchedule || getLihuiTodoSchedule() },
       memo_text: els.memoBox ? (els.memoBox.value || '') : '',
       todo_note_text: getProfileTodoNoteBox() ? (getProfileTodoNoteBox().value || '') : '',
       updated_at: new Date().toISOString()
@@ -4528,18 +4527,6 @@
       state.handoffMemo = String(row.state_json && row.state_json.handoffMemo || '');
       state.todoNote = row.todo_note_text || String(row.state_json && row.state_json.todoNote || '');
       state.todoSchedule = normalizeLihuiTodoSchedule(row.state_json && row.state_json.todoSchedule);
-      const hasNotepadMemo = !!(row.state_json && Object.prototype.hasOwnProperty.call(row.state_json,'notepadMemo'));
-      const hasNotepadMemo2 = !!(row.state_json && Object.prototype.hasOwnProperty.call(row.state_json,'notepadMemo2'));
-      hasMainNotepadCloudFields = hasNotepadMemo || hasNotepadMemo2;
-      if(hasMainNotepadCloudFields){
-        ensureProfileContainer();
-        if(hasNotepadMemo) appState.profiles.shaowei.memo = String(row.state_json.notepadMemo || '');
-        if(hasNotepadMemo2) appState.profiles.shaowei.handoffMemo = String(row.state_json.notepadMemo2 || '');
-        const notepadBox=document.getElementById('swDailyMemoBox');
-        const notepadBox2=document.getElementById('swDailyMemoBox2');
-        if(notepadBox&&document.activeElement!==notepadBox)notepadBox.value=appState.profiles.shaowei.memo||'';
-        if(notepadBox2&&document.activeElement!==notepadBox2)notepadBox2.value=appState.profiles.shaowei.handoffMemo||'';
-      }
       if(els.memoBox) els.memoBox.value = state.memo;
       const handoffMemoBox = getHandoffMemoBox();
       if(handoffMemoBox) handoffMemoBox.value = state.handoffMemo;
@@ -4626,10 +4613,9 @@
         todoNote:String(row.todo_note_text||row.state_json&&row.state_json.todoNote||''),
         todoSchedule:row.state_json&&row.state_json.todoSchedule
       });
-      if(hasMainNotepadCloudFields){
-        remoteShaowei.memo=currentShaowei.memo;
-        remoteShaowei.handoffMemo=currentShaowei.handoffMemo;
-      }
+      // 上方記事本目前先保留各裝置本機內容，禁止舊「紹薇／事項」雲端資料覆寫。
+      remoteShaowei.memo=currentShaowei.memo;
+      remoteShaowei.handoffMemo=currentShaowei.handoffMemo;
       appState.profiles.shaowei=remoteShaowei;
       lastShaoweiRemoteUpdatedAt=remoteUpdatedAt||lastShaoweiRemoteUpdatedAt;
       saveAppStateLocally();
