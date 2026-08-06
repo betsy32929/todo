@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V111：麗卉記事本使用獨立雲端資料，避免再與紹薇記事混用 -->
+<!-- V112：紹薇舊同步來源退役，事項與記事本改用麗卉專用資料 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V111</title>
+<title>麗卉待辦 V112</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -683,7 +683,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V111</span>
+        <span class="pageTitleText">待辦清單 V112</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉＋事項</span>
         </div>
@@ -1386,14 +1386,16 @@
     return 'todo_v22_shared';
   }
   function getShaoweiRemoteAppName(){
-    return 'todo_v22_shaowei';
+    return 'todo_v22_lihui_matters';
   }
   function getLihuiNotepadRemoteAppName(){
     return 'todo_v22_lihui_notepad';
   }
 
-  const SHAOWEI_DAILY_KEY = 'todo_shaowei_daily_v89';
-  const SHAOWEI_CONFIG_KEY = 'todo_shaowei_config_v98';
+  const SHAOWEI_DAILY_KEY = 'todo_lihui_daily_v112';
+  const SHAOWEI_CONFIG_KEY = 'todo_lihui_config_v112';
+  const LEGACY_SHAOWEI_DAILY_KEY = 'todo_shaowei_daily_v89';
+  const LEGACY_SHAOWEI_CONFIG_KEY = 'todo_shaowei_config_v98';
   const SHAOWEI_FLOW_TEMPLATES = {
     '旁件':['旁1','旁2','旁3'],
     'NEW本':['王總審核','房管','開會PPT','格局圖／動畫','鑰匙標籤製作、歸檔鎖櫃','NEW本ALL','物件影片製作'],
@@ -1426,7 +1428,7 @@
   function loadShaoweiConfig(){
     const fallback=defaultShaoweiConfig();
     try{
-      const saved=JSON.parse(localStorage.getItem(SHAOWEI_CONFIG_KEY)||'null');
+      const saved=JSON.parse(localStorage.getItem(SHAOWEI_CONFIG_KEY)||localStorage.getItem(LEGACY_SHAOWEI_CONFIG_KEY)||'null');
       if(!saved||typeof saved!=='object')return fallback;
       return {
         today:Array.isArray(saved.today)?saved.today:fallback.today,
@@ -1437,7 +1439,10 @@
     }catch(e){return fallback;}
   }
   function saveShaoweiConfig(config){
-    try{localStorage.setItem(SHAOWEI_CONFIG_KEY,JSON.stringify(config));}catch(e){}
+    try{
+      localStorage.setItem(SHAOWEI_CONFIG_KEY,JSON.stringify(config));
+      localStorage.removeItem(LEGACY_SHAOWEI_CONFIG_KEY);
+    }catch(e){}
   }
   function shaoweiLocalDateKey(d=new Date()){
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -1447,12 +1452,15 @@
   }
   function loadShaoweiDailyState(){
     try{
-      const parsed=JSON.parse(localStorage.getItem(SHAOWEI_DAILY_KEY)||'{}');
+      const parsed=JSON.parse(localStorage.getItem(SHAOWEI_DAILY_KEY)||localStorage.getItem(LEGACY_SHAOWEI_DAILY_KEY)||'{}');
       return parsed&&typeof parsed==='object'?parsed:{};
     }catch(e){return {};}
   }
   function saveShaoweiDailyState(data){
-    try{localStorage.setItem(SHAOWEI_DAILY_KEY,JSON.stringify(data));}catch(e){}
+    try{
+      localStorage.setItem(SHAOWEI_DAILY_KEY,JSON.stringify(data));
+      localStorage.removeItem(LEGACY_SHAOWEI_DAILY_KEY);
+    }catch(e){}
   }
   function shaoweiTodayItems(dayState,retainedItems=[]){
     const now=new Date();
@@ -4465,8 +4473,8 @@
     appState.profiles.shaowei=profile;
     const payload={
       app_name:getShaoweiRemoteAppName(),
-      state_json:{tasks:profile.tasks||[],handoffMemo:profile.handoffMemo||'',todoNote:profile.todoNote||'',todoSchedule:profile.todoSchedule||defaultLihuiTodoSchedule()},
-      memo_text:profile.memo||'',
+      state_json:{tasks:profile.tasks||[],todoNote:profile.todoNote||'',todoSchedule:profile.todoSchedule||defaultLihuiTodoSchedule()},
+      memo_text:'',
       todo_note_text:profile.todoNote||'',
       updated_at:new Date().toISOString()
     };
@@ -4640,7 +4648,7 @@
         todoNote:String(row.todo_note_text||row.state_json&&row.state_json.todoNote||''),
         todoSchedule:row.state_json&&row.state_json.todoSchedule
       });
-      // 上方記事本目前先保留各裝置本機內容，禁止舊「紹薇／事項」雲端資料覆寫。
+      // 事項資料與麗卉記事本分開同步，避免任一資料源互相覆寫。
       remoteShaowei.memo=currentShaowei.memo;
       remoteShaowei.handoffMemo=currentShaowei.handoffMemo;
       appState.profiles.shaowei=remoteShaowei;
