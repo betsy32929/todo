@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V110：緊急停止記事本雲端覆寫，保護各裝置現有本機內容 -->
+<!-- V111：麗卉記事本使用獨立雲端資料，避免再與紹薇記事混用 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V110</title>
+<title>麗卉待辦 V111</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -683,7 +683,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V110</span>
+        <span class="pageTitleText">待辦清單 V111</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉＋事項</span>
         </div>
@@ -1121,6 +1121,7 @@
   let editingMidOneId = '';
   let lastSharedRemoteUpdatedAt = '';
   let lastShaoweiRemoteUpdatedAt = '';
+  let lastNotepadRemoteUpdatedAt = '';
   let lastSupabaseErrorDetail = '';
   let mainDatePicker = null;
 
@@ -1386,6 +1387,9 @@
   }
   function getShaoweiRemoteAppName(){
     return 'todo_v22_shaowei';
+  }
+  function getLihuiNotepadRemoteAppName(){
+    return 'todo_v22_lihui_notepad';
   }
 
   const SHAOWEI_DAILY_KEY = 'todo_shaowei_daily_v89';
@@ -4307,9 +4311,9 @@
       .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: SUPABASE_TABLE }, payload => {
         const appName = (payload && payload.new && payload.new.app_name) || (payload && payload.old && payload.old.app_name) || '';
-        const watchNames = [getRemoteAppName(), getShaoweiRemoteAppName(), getSharedRemoteAppName()];
+        const watchNames = [getRemoteAppName(), getShaoweiRemoteAppName(), getSharedRemoteAppName(), getLihuiNotepadRemoteAppName()];
         if(!watchNames.includes(appName)) return;
-        Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
+        Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
       })
       .subscribe(status => {
         if(status === 'SUBSCRIBED') updateSupabaseStatus('已連線（即時同步中）');
@@ -4478,6 +4482,28 @@
     }
   }
 
+  async function saveLihuiNotepadToSupabaseNow(){
+    if(!supabaseClient || !syncEnabled || isApplyingRemote) return false;
+    ensureProfileContainer();
+    const profile=normalizeProfileState(appState.profiles.shaowei);
+    const payload={
+      app_name:getLihuiNotepadRemoteAppName(),
+      state_json:{memo:profile.memo||'',handoffMemo:profile.handoffMemo||''},
+      memo_text:profile.memo||'',
+      updated_at:new Date().toISOString()
+    };
+    try{
+      const {data,error}=await updateOrInsertSupabaseRow(payload);
+      if(error) throw error;
+      lastNotepadRemoteUpdatedAt=(data&&data.updated_at)||payload.updated_at;
+      return true;
+    }catch(err){
+      console.error('麗卉記事本同步失敗',err);
+      showSupabaseError('同步失敗',err);
+      return false;
+    }
+  }
+
   function scheduleSupabaseSave(){
     if(!supabaseClient || !syncEnabled) return;
     if(remoteSaveTimer) clearTimeout(remoteSaveTimer);
@@ -4485,6 +4511,7 @@
       saveToSupabaseNow();
       saveShaoweiProfileToSupabaseNow();
       saveSharedToSupabaseNow();
+      saveLihuiNotepadToSupabaseNow();
     }, 120);
   }
 
@@ -4628,6 +4655,40 @@
     }
   }
 
+  async function loadLihuiNotepadFromSupabase(forceApply = true){
+    if(!supabaseClient) return false;
+    try{
+      const selectors=['state_json,memo_text,updated_at','state_json,memo_text','state_json'];
+      let row=null;
+      let lastError=null;
+      for(const selector of selectors){
+        const result=await fetchSupabaseRowLatest(getLihuiNotepadRemoteAppName(),selector);
+        if(result&&!result.error){row=result.row;lastError=null;break;}
+        lastError=result&&result.error;
+      }
+      if(lastError) throw lastError;
+      if(!row) return false;
+      const remoteUpdatedAt=row.updated_at||'';
+      if(!forceApply&&lastNotepadRemoteUpdatedAt&&remoteUpdatedAt&&remoteUpdatedAt<=lastNotepadRemoteUpdatedAt) return false;
+      ensureProfileContainer();
+      isApplyingRemote=true;
+      const profile=normalizeProfileState(appState.profiles.shaowei);
+      profile.memo=String(row.state_json&&row.state_json.memo||row.memo_text||'');
+      profile.handoffMemo=String(row.state_json&&row.state_json.handoffMemo||'');
+      appState.profiles.shaowei=profile;
+      lastNotepadRemoteUpdatedAt=remoteUpdatedAt||lastNotepadRemoteUpdatedAt;
+      saveAppStateLocally();
+      renderShaoweiDailyBoard();
+      return true;
+    }catch(err){
+      console.error('麗卉記事本讀取失敗',err);
+      showSupabaseError('讀取失敗',err);
+      return false;
+    }finally{
+      isApplyingRemote=false;
+    }
+  }
+
   function persistShared(options = {}){
     saveAppStateLocally();
     saveStatus(options.statusText || '已儲存');
@@ -4654,10 +4715,11 @@
     const loaded = await loadFromSupabase(true);
     const shaoweiLoaded = await loadShaoweiProfileFromSupabase(true);
     const sharedLoaded = await loadSharedFromSupabase(true);
+    const notepadLoaded = await loadLihuiNotepadFromSupabase(true);
     ensureRecurringTasksForToday();
     renderAll();
     startRemoteSubscription();
-    if((loaded || shaoweiLoaded || sharedLoaded) && !lastSupabaseErrorDetail){
+    if((loaded || shaoweiLoaded || sharedLoaded || notepadLoaded) && !lastSupabaseErrorDetail){
       updateSupabaseStatus('已連線（即時同步中）');
     }else if(!loaded && !sharedLoaded && !lastSupabaseErrorDetail){
       updateSupabaseStatus('已連線（尚無雲端資料）');
@@ -4673,6 +4735,7 @@
     syncEnabled = false;
     lastRemoteUpdatedAt = '';
     lastShaoweiRemoteUpdatedAt = '';
+    lastNotepadRemoteUpdatedAt = '';
     lastSharedRemoteUpdatedAt = '';
     updateSupabaseStatus('預設隱藏');
     updateLastSyncText('');
@@ -4687,10 +4750,12 @@
     const saveMainOk = await saveToSupabaseNow();
     const saveShaoweiOk = await saveShaoweiProfileToSupabaseNow();
     const saveSharedOk = await saveSharedToSupabaseNow();
+    const saveNotepadOk = await saveLihuiNotepadToSupabaseNow();
     const loadMainOk = await loadFromSupabase(false);
     const loadShaoweiOk = await loadShaoweiProfileFromSupabase(false);
     const loadSharedOk = await loadSharedFromSupabase(false);
-    if(saveMainOk || saveShaoweiOk || saveSharedOk || loadMainOk || loadShaoweiOk || loadSharedOk){
+    const loadNotepadOk = await loadLihuiNotepadFromSupabase(false);
+    if(saveMainOk || saveShaoweiOk || saveSharedOk || saveNotepadOk || loadMainOk || loadShaoweiOk || loadSharedOk || loadNotepadOk){
       updateSupabaseStatus('已連線（即時同步中）');
     }else if(!lastSupabaseErrorDetail){
       updateSupabaseStatus('已連線（尚無雲端資料）');
@@ -4986,13 +5051,13 @@
 
   document.addEventListener('visibilitychange', () => {
     if(document.visibilityState === 'visible' && supabaseClient && syncEnabled){
-      Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
+      Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
     }
   });
 
   window.addEventListener('online', () => {
     if(supabaseClient && syncEnabled){
-      Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
+      Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
     }
   });
 
@@ -5012,6 +5077,7 @@
       await loadFromSupabase();
       await loadShaoweiProfileFromSupabase();
       await loadSharedFromSupabase();
+      await loadLihuiNotepadFromSupabase();
       startRemoteSubscription();
       return true;
     }catch(err){
