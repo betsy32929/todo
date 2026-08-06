@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V112：紹薇舊同步來源退役，事項與記事本改用麗卉專用資料 -->
+<!-- V113：完成紹薇舊設定清除，僅保留麗卉事項與記事本資料 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V112</title>
+<title>麗卉待辦 V113</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -683,7 +683,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V112</span>
+        <span class="pageTitleText">待辦清單 V113</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span class="statusText" id="profileModeText">麗卉＋事項</span>
         </div>
@@ -1430,12 +1430,14 @@
     try{
       const saved=JSON.parse(localStorage.getItem(SHAOWEI_CONFIG_KEY)||localStorage.getItem(LEGACY_SHAOWEI_CONFIG_KEY)||'null');
       if(!saved||typeof saved!=='object')return fallback;
-      return {
+      const migrated={
         today:Array.isArray(saved.today)?saved.today:fallback.today,
         flows:saved.flows&&typeof saved.flows==='object'?saved.flows:fallback.flows,
         weekly:Array.isArray(saved.weekly)?saved.weekly:fallback.weekly,
         month:Array.isArray(saved.month)?saved.month:fallback.month
       };
+      saveShaoweiConfig(migrated);
+      return migrated;
     }catch(e){return fallback;}
   }
   function saveShaoweiConfig(config){
@@ -1453,7 +1455,9 @@
   function loadShaoweiDailyState(){
     try{
       const parsed=JSON.parse(localStorage.getItem(SHAOWEI_DAILY_KEY)||localStorage.getItem(LEGACY_SHAOWEI_DAILY_KEY)||'{}');
-      return parsed&&typeof parsed==='object'?parsed:{};
+      const migrated=parsed&&typeof parsed==='object'?parsed:{};
+      saveShaoweiDailyState(migrated);
+      return migrated;
     }catch(e){return {};}
   }
   function saveShaoweiDailyState(data){
