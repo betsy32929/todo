@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V121：花花代辦事項表格改為完整格線 -->
+<!-- V122：花花修改時間涵蓋日期項目，完成項目自動置底 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V121</title>
+<title>麗卉待辦 V122</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -687,7 +687,7 @@
   .flowerHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
   .flowerHead b{font-size:22px;color:#354052}.flowerHint{font-size:13px;color:#7a8496}
   .flowerMemoGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-  .flowerMemoBox{width:100%;min-height:156px;box-sizing:border-box;resize:vertical;border:1px solid #e4bfd1;border-radius:15px;padding:12px 14px;font:15px/1.55 inherit;outline:none;background:#fff}
+  .flowerMemoBox{width:100%;height:112px;min-height:112px;box-sizing:border-box;resize:vertical;border:1px solid #e4bfd1;border-radius:15px;padding:10px 14px;font:15px/1.55 inherit;outline:none;background:#fff}
   .flowerMemoBox:focus{border-color:#de83ad;box-shadow:0 0 0 3px rgba(222,131,173,.13)}
   .flowerInputRow{display:grid;grid-template-columns:minmax(150px,210px) minmax(220px,1fr) auto;gap:10px;margin:12px 0}
   .flowerInput{border:1px solid #d7ddea;border-radius:12px;padding:10px 12px;font-size:15px;min-width:0}
@@ -701,6 +701,7 @@
   .flowerTable th,.flowerTable td{padding:10px 12px;border:1px solid #d7dce7;text-align:left;vertical-align:middle}
   .flowerTable th{background:#f8eaf1;color:#586274;font-size:14px}.flowerTable tr:last-child td{border-bottom:0}
   .flowerTable tbody tr{background:#fff1f5}.flowerTable tbody tr:nth-child(even){background:#f1f0ff}.flowerTable tbody tr.done{background:#eaf6ec}
+  .flowerItem{font-weight:900;color:#354052}.flowerRowItem{font-weight:900}
   .flowerTable tr.done .flowerItem{text-decoration:line-through;color:#9aa2af}
   .flowerDoneBtn{border:1px solid #b8c5d8;border-radius:9px;padding:6px 11px;background:#fff;color:#52627a;cursor:pointer;white-space:nowrap}
   .flowerActionBtns{display:flex;gap:6px;flex-wrap:wrap}.flowerManageBtns{display:flex;flex-direction:column;gap:6px;align-items:stretch}.flowerEditBtn,.flowerDeleteBtn,.flowerSaveBtn,.flowerCancelBtn{border:1px solid #c8d1df;border-radius:9px;padding:6px 8px;background:#fff;color:#52627a;cursor:pointer;white-space:nowrap}
@@ -719,7 +720,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V121</span>
+        <span class="pageTitleText">待辦清單 V122</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="personSwitch" aria-label="使用者切換">
             <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
@@ -735,8 +736,8 @@
     <div class="flowerWrap">
       <div class="flowerHead"><b>花花</b><span class="flowerHint">記事欄即時記憶</span></div>
       <div class="flowerMemoGrid">
-        <textarea id="flowerMemoLeft" class="flowerMemoBox" rows="8" placeholder="記事欄 1"></textarea>
-        <textarea id="flowerMemoRight" class="flowerMemoBox" rows="8" placeholder="記事欄 2"></textarea>
+        <textarea id="flowerMemoLeft" class="flowerMemoBox" rows="4" placeholder="記事欄 1"></textarea>
+        <textarea id="flowerMemoRight" class="flowerMemoBox" rows="4" placeholder="記事欄 2"></textarea>
       </div>
       <div class="flowerHead"><b>代辦事項</b><span class="flowerHint">日期與項目輸入後加入下方表格</span></div>
       <div class="flowerInputRow">
@@ -1467,7 +1468,7 @@
     return {
       memoLeft:'',
       memoRight:'',
-      todos:[{id:'flower_default_20260814',date:'2026-08-14',item:'NEW本封背',done:false,handoff:'',handoffUpdatedAt:''}]
+      todos:[{id:'flower_default_20260814',date:'2026-08-14',item:'NEW本封背',done:false,handoff:'',lastUpdatedAt:''}]
     };
   }
   function normalizeFlowerState(value){
@@ -1482,7 +1483,7 @@
         item:String(todo&&todo.item||''),
         done:!!(todo&&todo.done),
         handoff:String(todo&&todo.handoff||''),
-        handoffUpdatedAt:String(todo&&todo.handoffUpdatedAt||'')
+        lastUpdatedAt:String(todo&&(todo.lastUpdatedAt||todo.handoffUpdatedAt)||'')
       })).filter(todo=>todo.item):fallback.todos
     };
   }
@@ -1551,7 +1552,8 @@
     if(right&&document.activeElement!==right)right.value=flowerState.memoRight;
     const body=document.getElementById('flowerTodoBody');
     if(!body)return;
-    body.innerHTML=flowerState.todos.length?flowerState.todos.map(todo=>{
+    const sortedTodos=[...flowerState.todos.filter(todo=>!todo.done),...flowerState.todos.filter(todo=>todo.done)];
+    body.innerHTML=sortedTodos.length?sortedTodos.map(todo=>{
       const editing=flowerEditingId===todo.id;
       return `
       <tr class="${todo.done?'done':''}" data-flower-id="${escapeHtml(todo.id)}">
@@ -1562,7 +1564,7 @@
         <td class="flowerItem">${editing?`<input class="flowerRowInput flowerRowItem" type="text" lang="zh-Hant" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${escapeHtml(todo.item)}" aria-label="編輯項目">`:escapeHtml(todo.item)}</td>
         <td><button class="flowerDoneBtn" type="button" data-flower-action="done">${todo.done?'已完成':'完成'}</button></td>
         <td><textarea class="flowerHandoff" rows="2" placeholder="輸入交接記事">${escapeHtml(todo.handoff)}</textarea></td>
-        <td><span class="flowerHandoffTime">${escapeHtml(flowerHandoffTimeLabel(todo.handoffUpdatedAt))}</span></td>
+        <td><span class="flowerHandoffTime">${escapeHtml(flowerHandoffTimeLabel(todo.lastUpdatedAt))}</span></td>
       </tr>`;
     }).join(''):'<tr><td colspan="6" style="text-align:center;color:#929bad">目前沒有代辦事項</td></tr>';
   }
@@ -5261,7 +5263,7 @@
     const item=itemInput&&itemInput.value.trim()||'';
     if(!date){validateFlowerDateInput(true);dateInput.focus();return;}
     if(!item){alert('請輸入項目');return;}
-    flowerState.todos.push({id:`flower_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,date,item,done:false,handoff:'',handoffUpdatedAt:''});
+    flowerState.todos.push({id:`flower_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,date,item,done:false,handoff:'',lastUpdatedAt:new Date().toISOString()});
     dateInput.value='';
     validateFlowerDateInput(false);
     itemInput.value='';
@@ -5298,6 +5300,7 @@
       if(!item){itemInput?.focus();return;}
       todo.date=date;
       todo.item=item;
+      todo.lastUpdatedAt=new Date().toISOString();
       flowerEditingId='';
       persistFlower();
     }else if(action==='delete'){
@@ -5317,9 +5320,9 @@
     const todo=flowerState.todos.find(item=>item.id===row?.dataset.flowerId);
     if(todo){
       todo.handoff=event.target.value||'';
-      todo.handoffUpdatedAt=new Date().toISOString();
+      todo.lastUpdatedAt=new Date().toISOString();
       const time=row.querySelector('.flowerHandoffTime');
-      if(time)time.textContent=flowerHandoffTimeLabel(todo.handoffUpdatedAt);
+      if(time)time.textContent=flowerHandoffTimeLabel(todo.lastUpdatedAt);
       saveFlowerLocally();
       scheduleSupabaseSave();
     }
