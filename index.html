@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V117：花花最後修改時間改為表格獨立欄位 -->
+<!-- V118：花花版面與麗卉行事曆、清單及重複設定完全隔離 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V117</title>
+<title>麗卉待辦 V118</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -680,6 +680,9 @@
   .personSwitchBtn.active{background:#fff;color:#285ca8;box-shadow:0 2px 8px rgba(50,65,90,.14)}
   #flowerPage{display:none}
   #flowerPage.active{display:block}
+  body[data-person-view="flower"] .lihuiOnly{display:none!important}
+  body[data-person-view="flower"] #flowerPage{display:block!important}
+  body:not([data-person-view="flower"]) #flowerPage{display:none!important}
   .flowerWrap{padding:16px;background:linear-gradient(180deg,#fff9fc,#f7fbff)}
   .flowerHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
   .flowerHead b{font-size:22px;color:#354052}.flowerHint{font-size:13px;color:#7a8496}
@@ -712,7 +715,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V117</span>
+        <span class="pageTitleText">待辦清單 V118</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="personSwitch" aria-label="使用者切換">
             <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
@@ -1554,6 +1557,7 @@
   }
   function showPersonPage(person){
     const flower=person==='flower';
+    document.body.dataset.personView=flower?'flower':'lihui';
     document.querySelectorAll('.page>*').forEach((section,index)=>{
       if(index===0)return;
       section.style.display=flower?(section.id==='flowerPage'?'block':'none'):(section.id==='flowerPage'?'none':'');
@@ -2045,6 +2049,9 @@
     if(els.midOneTaskBtn) els.midOneTaskBtn.style.display='none';
     [supabase,calendar,notepad,taskInput,todayList,todayFlow,fixed,taskList,month,noteCard,sharedMemo,repeat].forEach(el=>el&&page.appendChild(el));
     document.getElementById('shaoweiDailySection')?.remove();
+    Array.from(page.children).forEach((element,index)=>{
+      if(index>0&&element.id!=='flowerPage')element.classList.add('lihuiOnly');
+    });
   }
   async function switchProfile(profileKey){
     const next = profileKey === 'shaowei' ? 'shaowei' : 'lihui';
