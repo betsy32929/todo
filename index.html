@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V116：花花日期即時驗證、交接修改時間與代辦底色 -->
+<!-- V117：花花最後修改時間改為表格獨立欄位 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V116</title>
+<title>麗卉待辦 V117</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -693,7 +693,7 @@
   .flowerDateError{display:none;color:#d33131;font-size:12px;font-weight:800;padding-left:4px}.flowerDateError.show{display:block}
   .flowerAddBtn{border:0;border-radius:12px;padding:10px 18px;background:#df83ac;color:#fff;font-weight:900;cursor:pointer}
   .flowerTableWrap{overflow-x:auto;border:1px solid #e3e7ef;border-radius:14px;background:#fff}
-  .flowerTable{width:100%;border-collapse:collapse;min-width:680px}
+  .flowerTable{width:100%;border-collapse:collapse;min-width:820px}
   .flowerTable th,.flowerTable td{padding:10px 12px;border-bottom:1px solid #edf0f5;text-align:left;vertical-align:middle}
   .flowerTable th{background:#f8eaf1;color:#586274;font-size:14px}.flowerTable tr:last-child td{border-bottom:0}
   .flowerTable tbody tr{background:#fff8dc}.flowerTable tbody tr:nth-child(even){background:#fff2cc}.flowerTable tbody tr.done{background:#edf7ee}
@@ -701,7 +701,7 @@
   .flowerDoneBtn{border:1px solid #b8c5d8;border-radius:9px;padding:6px 11px;background:#fff;color:#52627a;cursor:pointer;white-space:nowrap}
   .flowerTable tr.done .flowerDoneBtn{background:#e8f4ea;border-color:#a9d2ae;color:#397344}
   .flowerHandoff{width:100%;min-width:210px;box-sizing:border-box;border:1px solid #dce2ec;border-radius:9px;padding:7px 9px;resize:vertical;font:14px/1.4 inherit}
-  .flowerHandoffTime{display:block;margin-top:5px;color:#7b8493;font-size:12px;white-space:nowrap}
+  .flowerHandoffTime{color:#7b8493;font-size:12px;white-space:nowrap}
   @media(max-width:700px){.flowerMemoGrid{grid-template-columns:1fr}.flowerInputRow{grid-template-columns:1fr}.personSwitchBtn{padding:7px 11px}.flowerWrap{padding:11px}}
 
 </style>
@@ -712,7 +712,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V116</span>
+        <span class="pageTitleText">待辦清單 V117</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="personSwitch" aria-label="使用者切換">
             <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
@@ -742,7 +742,7 @@
       </div>
       <div class="flowerTableWrap">
         <table class="flowerTable">
-          <thead><tr><th>日期</th><th>項目</th><th>操作</th><th>交接記事</th></tr></thead>
+          <thead><tr><th>日期</th><th>項目</th><th>操作</th><th>交接記事</th><th>最後修改</th></tr></thead>
           <tbody id="flowerTodoBody"></tbody>
         </table>
       </div>
@@ -1513,11 +1513,11 @@
     return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   }
   function flowerHandoffTimeLabel(value){
-    if(!value)return '最後修改：尚未修改';
+    if(!value)return '尚未修改';
     const date=new Date(value);
-    if(Number.isNaN(date.getTime()))return '最後修改：尚未修改';
+    if(Number.isNaN(date.getTime()))return '尚未修改';
     const rocYear=date.getFullYear()-1911;
-    return `最後修改：${rocYear}/${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}:${String(date.getSeconds()).padStart(2,'0')}`;
+    return `${rocYear}/${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}:${String(date.getSeconds()).padStart(2,'0')}`;
   }
   function validateFlowerDateInput(showEmpty=false){
     const input=document.getElementById('flowerDateInput');
@@ -1543,8 +1543,9 @@
         <td>${escapeHtml(flowerDateLabel(todo.date))}</td>
         <td class="flowerItem">${escapeHtml(todo.item)}</td>
         <td><button class="flowerDoneBtn" type="button" data-flower-action="done">${todo.done?'已完成':'完成'}</button></td>
-        <td><textarea class="flowerHandoff" rows="2" placeholder="輸入交接記事">${escapeHtml(todo.handoff)}</textarea><span class="flowerHandoffTime">${escapeHtml(flowerHandoffTimeLabel(todo.handoffUpdatedAt))}</span></td>
-      </tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#929bad">目前沒有代辦事項</td></tr>';
+        <td><textarea class="flowerHandoff" rows="2" placeholder="輸入交接記事">${escapeHtml(todo.handoff)}</textarea></td>
+        <td><span class="flowerHandoffTime">${escapeHtml(flowerHandoffTimeLabel(todo.handoffUpdatedAt))}</span></td>
+      </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:#929bad">目前沒有代辦事項</td></tr>';
   }
   function persistFlower(){
     saveFlowerLocally();
