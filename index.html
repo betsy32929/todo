@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V118：花花版面與麗卉行事曆、清單及重複設定完全隔離 -->
+<!-- V119：花花代辦新增編輯刪除與繁中輸入提示 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V118</title>
+<title>麗卉待辦 V119</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -699,9 +699,12 @@
   .flowerTable{width:100%;border-collapse:collapse;min-width:820px}
   .flowerTable th,.flowerTable td{padding:10px 12px;border-bottom:1px solid #edf0f5;text-align:left;vertical-align:middle}
   .flowerTable th{background:#f8eaf1;color:#586274;font-size:14px}.flowerTable tr:last-child td{border-bottom:0}
-  .flowerTable tbody tr{background:#fff8dc}.flowerTable tbody tr:nth-child(even){background:#fff2cc}.flowerTable tbody tr.done{background:#edf7ee}
+  .flowerTable tbody tr{background:#fff9e8}.flowerTable tbody tr:nth-child(even){background:#eef6ff}.flowerTable tbody tr.done{background:#eaf6ec}
   .flowerTable tr.done .flowerItem{text-decoration:line-through;color:#9aa2af}
   .flowerDoneBtn{border:1px solid #b8c5d8;border-radius:9px;padding:6px 11px;background:#fff;color:#52627a;cursor:pointer;white-space:nowrap}
+  .flowerActionBtns{display:flex;gap:6px;flex-wrap:wrap}.flowerEditBtn,.flowerDeleteBtn,.flowerSaveBtn,.flowerCancelBtn{border:1px solid #c8d1df;border-radius:9px;padding:6px 10px;background:#fff;color:#52627a;cursor:pointer;white-space:nowrap}
+  .flowerEditBtn{color:#2f67a8}.flowerDeleteBtn{color:#b13b49;border-color:#e2b8be}.flowerSaveBtn{background:#e7f3ff;color:#215d9c;border-color:#b4d2ef}.flowerCancelBtn{color:#737b88}
+  .flowerRowInput{width:100%;min-width:105px;box-sizing:border-box;border:1px solid #bdc8d8;border-radius:8px;padding:7px 8px;font:14px inherit}.flowerRowInput.invalid{border-color:#e24848;background:#fff1f1;color:#b42323}
   .flowerTable tr.done .flowerDoneBtn{background:#e8f4ea;border-color:#a9d2ae;color:#397344}
   .flowerHandoff{width:100%;min-width:210px;box-sizing:border-box;border:1px solid #dce2ec;border-radius:9px;padding:7px 9px;resize:vertical;font:14px/1.4 inherit}
   .flowerHandoffTime{color:#7b8493;font-size:12px;white-space:nowrap}
@@ -715,7 +718,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V118</span>
+        <span class="pageTitleText">待辦清單 V119</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="personSwitch" aria-label="使用者切換">
             <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
@@ -740,7 +743,7 @@
           <input id="flowerDateInput" class="flowerInput" type="text" inputmode="numeric" placeholder="輸入日期，例如 8/14" aria-label="日期">
           <span id="flowerDateError" class="flowerDateError">日期錯誤，請重新輸入</span>
         </div>
-        <input id="flowerItemInput" class="flowerInput" type="text" placeholder="輸入項目" aria-label="項目">
+        <input id="flowerItemInput" class="flowerInput" type="text" lang="zh-Hant" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="輸入項目" aria-label="項目">
         <button id="flowerAddBtn" class="flowerAddBtn" type="button">新增</button>
       </div>
       <div class="flowerTableWrap">
@@ -1487,6 +1490,7 @@
       return saved?normalizeFlowerState(saved):defaultFlowerState();
     }catch(e){return defaultFlowerState();}
   })();
+  let flowerEditingId='';
   function saveFlowerLocally(){
     try{localStorage.setItem(FLOWER_LOCAL_KEY,JSON.stringify(flowerState));}catch(e){}
   }
@@ -1495,6 +1499,10 @@
     if(!match)return value||'';
     const date=new Date(Number(match[1]),Number(match[2])-1,Number(match[3]));
     return `${Number(match[2])}/${Number(match[3])}（${'日一二三四五六'[date.getDay()]}）`;
+  }
+  function flowerDateInputValue(value){
+    const match=String(value||'').match(/^\d{4}-(\d{2})-(\d{2})$/);
+    return match?`${Number(match[1])}/${Number(match[2])}`:String(value||'');
   }
   function normalizeFlowerDateInput(value){
     const text=String(value||'').trim().replace(/[／.-]/g,'/').replace(/\s+/g,'');
@@ -1541,14 +1549,19 @@
     if(right&&document.activeElement!==right)right.value=flowerState.memoRight;
     const body=document.getElementById('flowerTodoBody');
     if(!body)return;
-    body.innerHTML=flowerState.todos.length?flowerState.todos.map(todo=>`
+    body.innerHTML=flowerState.todos.length?flowerState.todos.map(todo=>{
+      const editing=flowerEditingId===todo.id;
+      return `
       <tr class="${todo.done?'done':''}" data-flower-id="${escapeHtml(todo.id)}">
-        <td>${escapeHtml(flowerDateLabel(todo.date))}</td>
-        <td class="flowerItem">${escapeHtml(todo.item)}</td>
-        <td><button class="flowerDoneBtn" type="button" data-flower-action="done">${todo.done?'已完成':'完成'}</button></td>
+        <td>${editing?`<input class="flowerRowInput flowerRowDate" type="text" inputmode="numeric" value="${escapeHtml(flowerDateInputValue(todo.date))}" aria-label="編輯日期">`:escapeHtml(flowerDateLabel(todo.date))}</td>
+        <td class="flowerItem">${editing?`<input class="flowerRowInput flowerRowItem" type="text" lang="zh-Hant" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${escapeHtml(todo.item)}" aria-label="編輯項目">`:escapeHtml(todo.item)}</td>
+        <td><div class="flowerActionBtns">${editing
+          ?'<button class="flowerSaveBtn" type="button" data-flower-action="save">儲存</button><button class="flowerCancelBtn" type="button" data-flower-action="cancel">取消</button>'
+          :`<button class="flowerDoneBtn" type="button" data-flower-action="done">${todo.done?'已完成':'完成'}</button><button class="flowerEditBtn" type="button" data-flower-action="edit">編輯</button>`}<button class="flowerDeleteBtn" type="button" data-flower-action="delete">刪除</button></div></td>
         <td><textarea class="flowerHandoff" rows="2" placeholder="輸入交接記事">${escapeHtml(todo.handoff)}</textarea></td>
         <td><span class="flowerHandoffTime">${escapeHtml(flowerHandoffTimeLabel(todo.handoffUpdatedAt))}</span></td>
-      </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:#929bad">目前沒有代辦事項</td></tr>';
+      </tr>`;
+    }).join(''):'<tr><td colspan="5" style="text-align:center;color:#929bad">目前沒有代辦事項</td></tr>';
   }
   function persistFlower(){
     saveFlowerLocally();
@@ -5255,13 +5268,47 @@
     if(event.key==='Enter'){event.preventDefault();document.getElementById('flowerAddBtn')?.click();}
   });
   document.getElementById('flowerTodoBody')?.addEventListener('click',event=>{
-    const button=event.target.closest('[data-flower-action="done"]');
+    const button=event.target.closest('[data-flower-action]');
     if(!button)return;
     const row=button.closest('[data-flower-id]');
     const todo=flowerState.todos.find(item=>item.id===row?.dataset.flowerId);
-    if(todo){todo.done=!todo.done;persistFlower();}
+    if(!todo)return;
+    const action=button.dataset.flowerAction;
+    if(action==='done'){
+      todo.done=!todo.done;
+      persistFlower();
+    }else if(action==='edit'){
+      flowerEditingId=todo.id;
+      renderFlower();
+      document.querySelector(`[data-flower-id="${CSS.escape(todo.id)}"] .flowerRowItem`)?.focus();
+    }else if(action==='cancel'){
+      flowerEditingId='';
+      renderFlower();
+    }else if(action==='save'){
+      const dateInput=row.querySelector('.flowerRowDate');
+      const itemInput=row.querySelector('.flowerRowItem');
+      const date=normalizeFlowerDateInput(dateInput&&dateInput.value);
+      const item=String(itemInput&&itemInput.value||'').trim();
+      dateInput?.classList.toggle('invalid',!date);
+      itemInput?.classList.toggle('invalid',!item);
+      if(!date){dateInput?.focus();return;}
+      if(!item){itemInput?.focus();return;}
+      todo.date=date;
+      todo.item=item;
+      flowerEditingId='';
+      persistFlower();
+    }else if(action==='delete'){
+      if(!confirm(`確定刪除「${todo.item}」？`))return;
+      flowerState.todos=flowerState.todos.filter(item=>item.id!==todo.id);
+      if(flowerEditingId===todo.id)flowerEditingId='';
+      persistFlower();
+    }
   });
   document.getElementById('flowerTodoBody')?.addEventListener('input',event=>{
+    if(event.target.classList.contains('flowerRowDate')){
+      event.target.classList.toggle('invalid',!normalizeFlowerDateInput(event.target.value));
+      return;
+    }
     if(!event.target.classList.contains('flowerHandoff'))return;
     const row=event.target.closest('[data-flower-id]');
     const todo=flowerState.todos.find(item=>item.id===row?.dataset.flowerId);
