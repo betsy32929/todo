@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V113：完成紹薇舊設定清除，僅保留麗卉事項與記事本資料 -->
+<!-- V114：新增花花切換頁、雙欄記事與交接代辦表格 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V113</title>
+<title>麗卉待辦 V114</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -675,6 +675,30 @@
   @media(max-width:700px){.swNotepadGrid{grid-template-columns:1fr;}}
   @media(max-width:560px){.swDailyWrap{padding:10px;}.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:1fr;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}.swSettingsTabs{grid-template-columns:1fr 1fr}.swSettingsAdd,.swSettingsRow{grid-template-columns:1fr}.swSettingsModal{max-height:94vh}}
 
+  .personSwitch{display:flex;gap:7px;padding:4px;background:#f3f5f8;border-radius:13px}
+  .personSwitchBtn{border:0;border-radius:10px;padding:7px 15px;background:transparent;color:#657085;font-weight:800;cursor:pointer}
+  .personSwitchBtn.active{background:#fff;color:#285ca8;box-shadow:0 2px 8px rgba(50,65,90,.14)}
+  #flowerPage{display:none}
+  #flowerPage.active{display:block}
+  .flowerWrap{padding:16px;background:linear-gradient(180deg,#fff9fc,#f7fbff)}
+  .flowerHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+  .flowerHead b{font-size:22px;color:#354052}.flowerHint{font-size:13px;color:#7a8496}
+  .flowerMemoGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .flowerMemoBox{width:100%;min-height:156px;box-sizing:border-box;resize:vertical;border:1px solid #e4bfd1;border-radius:15px;padding:12px 14px;font:15px/1.55 inherit;outline:none;background:#fff}
+  .flowerMemoBox:focus{border-color:#de83ad;box-shadow:0 0 0 3px rgba(222,131,173,.13)}
+  .flowerInputRow{display:grid;grid-template-columns:minmax(150px,210px) minmax(220px,1fr) auto;gap:10px;margin:12px 0}
+  .flowerInput{border:1px solid #d7ddea;border-radius:12px;padding:10px 12px;font-size:15px;min-width:0}
+  .flowerAddBtn{border:0;border-radius:12px;padding:10px 18px;background:#df83ac;color:#fff;font-weight:900;cursor:pointer}
+  .flowerTableWrap{overflow-x:auto;border:1px solid #e3e7ef;border-radius:14px;background:#fff}
+  .flowerTable{width:100%;border-collapse:collapse;min-width:680px}
+  .flowerTable th,.flowerTable td{padding:10px 12px;border-bottom:1px solid #edf0f5;text-align:left;vertical-align:middle}
+  .flowerTable th{background:#f8eaf1;color:#586274;font-size:14px}.flowerTable tr:last-child td{border-bottom:0}
+  .flowerTable tr.done .flowerItem{text-decoration:line-through;color:#9aa2af}
+  .flowerDoneBtn{border:1px solid #b8c5d8;border-radius:9px;padding:6px 11px;background:#fff;color:#52627a;cursor:pointer;white-space:nowrap}
+  .flowerTable tr.done .flowerDoneBtn{background:#e8f4ea;border-color:#a9d2ae;color:#397344}
+  .flowerHandoff{width:100%;min-width:210px;box-sizing:border-box;border:1px solid #dce2ec;border-radius:9px;padding:7px 9px;resize:vertical;font:14px/1.4 inherit}
+  @media(max-width:700px){.flowerMemoGrid{grid-template-columns:1fr}.flowerInputRow{grid-template-columns:1fr}.personSwitchBtn{padding:7px 11px}.flowerWrap{padding:11px}}
+
 </style>
 </head>
 <body>
@@ -683,10 +707,36 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V113</span>
+        <span class="pageTitleText">待辦清單 V114</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <span class="statusText" id="profileModeText">麗卉＋事項</span>
+          <div class="personSwitch" aria-label="使用者切換">
+            <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
+            <button class="personSwitchBtn" id="showFlowerBtn" type="button">花花</button>
+          </div>
+          <span class="statusText" id="profileModeText" style="display:none">麗卉</span>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="flowerPage">
+    <div class="flowerWrap">
+      <div class="flowerHead"><b>花花</b><span class="flowerHint">記事欄即時記憶</span></div>
+      <div class="flowerMemoGrid">
+        <textarea id="flowerMemoLeft" class="flowerMemoBox" rows="8" placeholder="記事欄 1"></textarea>
+        <textarea id="flowerMemoRight" class="flowerMemoBox" rows="8" placeholder="記事欄 2"></textarea>
+      </div>
+      <div class="flowerHead"><b>代辦事項</b><span class="flowerHint">日期與項目輸入後加入下方表格</span></div>
+      <div class="flowerInputRow">
+        <input id="flowerDateInput" class="flowerInput" type="date" aria-label="日期">
+        <input id="flowerItemInput" class="flowerInput" type="text" placeholder="輸入項目" aria-label="項目">
+        <button id="flowerAddBtn" class="flowerAddBtn" type="button">新增</button>
+      </div>
+      <div class="flowerTableWrap">
+        <table class="flowerTable">
+          <thead><tr><th>日期</th><th>項目</th><th>操作</th><th>交接記事</th></tr></thead>
+          <tbody id="flowerTodoBody"></tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -1122,6 +1172,7 @@
   let lastSharedRemoteUpdatedAt = '';
   let lastShaoweiRemoteUpdatedAt = '';
   let lastNotepadRemoteUpdatedAt = '';
+  let lastFlowerRemoteUpdatedAt = '';
   let lastSupabaseErrorDetail = '';
   let mainDatePicker = null;
 
@@ -1390,6 +1441,78 @@
   }
   function getLihuiNotepadRemoteAppName(){
     return 'todo_v22_lihui_notepad';
+  }
+  function getFlowerRemoteAppName(){
+    return 'todo_v22_flower';
+  }
+
+  const FLOWER_LOCAL_KEY='todo_flower_v114';
+  function defaultFlowerState(){
+    return {
+      memoLeft:'',
+      memoRight:'',
+      todos:[{id:'flower_default_20260814',date:'2026-08-14',item:'NEW本封背',done:false,handoff:''}]
+    };
+  }
+  function normalizeFlowerState(value){
+    const fallback=defaultFlowerState();
+    const data=value&&typeof value==='object'?value:{};
+    return {
+      memoLeft:String(data.memoLeft||''),
+      memoRight:String(data.memoRight||''),
+      todos:Array.isArray(data.todos)?data.todos.map(todo=>({
+        id:String(todo&&todo.id||`flower_${Date.now()}_${Math.random().toString(36).slice(2,7)}`),
+        date:String(todo&&todo.date||''),
+        item:String(todo&&todo.item||''),
+        done:!!(todo&&todo.done),
+        handoff:String(todo&&todo.handoff||'')
+      })).filter(todo=>todo.item):fallback.todos
+    };
+  }
+  let flowerState=(()=>{
+    try{
+      const saved=JSON.parse(localStorage.getItem(FLOWER_LOCAL_KEY)||'null');
+      return saved?normalizeFlowerState(saved):defaultFlowerState();
+    }catch(e){return defaultFlowerState();}
+  })();
+  function saveFlowerLocally(){
+    try{localStorage.setItem(FLOWER_LOCAL_KEY,JSON.stringify(flowerState));}catch(e){}
+  }
+  function flowerDateLabel(value){
+    const match=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!match)return value||'';
+    const date=new Date(Number(match[1]),Number(match[2])-1,Number(match[3]));
+    return `${Number(match[2])}/${Number(match[3])}（${'日一二三四五六'[date.getDay()]}）`;
+  }
+  function renderFlower(){
+    const left=document.getElementById('flowerMemoLeft');
+    const right=document.getElementById('flowerMemoRight');
+    if(left&&document.activeElement!==left)left.value=flowerState.memoLeft;
+    if(right&&document.activeElement!==right)right.value=flowerState.memoRight;
+    const body=document.getElementById('flowerTodoBody');
+    if(!body)return;
+    body.innerHTML=flowerState.todos.length?flowerState.todos.map(todo=>`
+      <tr class="${todo.done?'done':''}" data-flower-id="${escapeHtml(todo.id)}">
+        <td>${escapeHtml(flowerDateLabel(todo.date))}</td>
+        <td class="flowerItem">${escapeHtml(todo.item)}</td>
+        <td><button class="flowerDoneBtn" type="button" data-flower-action="done">${todo.done?'已完成':'完成'}</button></td>
+        <td><textarea class="flowerHandoff" rows="2" placeholder="輸入交接記事">${escapeHtml(todo.handoff)}</textarea></td>
+      </tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#929bad">目前沒有代辦事項</td></tr>';
+  }
+  function persistFlower(){
+    saveFlowerLocally();
+    renderFlower();
+    scheduleSupabaseSave();
+  }
+  function showPersonPage(person){
+    const flower=person==='flower';
+    document.querySelectorAll('.page>*').forEach((section,index)=>{
+      if(index===0)return;
+      section.style.display=flower?(section.id==='flowerPage'?'block':'none'):(section.id==='flowerPage'?'none':'');
+    });
+    document.getElementById('showLihuiBtn')?.classList.toggle('active',!flower);
+    document.getElementById('showFlowerBtn')?.classList.toggle('active',flower);
+    if(flower)renderFlower();
   }
 
   const SHAOWEI_DAILY_KEY = 'todo_lihui_daily_v112';
@@ -4323,9 +4446,9 @@
       .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: SUPABASE_TABLE }, payload => {
         const appName = (payload && payload.new && payload.new.app_name) || (payload && payload.old && payload.old.app_name) || '';
-        const watchNames = [getRemoteAppName(), getShaoweiRemoteAppName(), getSharedRemoteAppName(), getLihuiNotepadRemoteAppName()];
+        const watchNames = [getRemoteAppName(), getShaoweiRemoteAppName(), getSharedRemoteAppName(), getLihuiNotepadRemoteAppName(), getFlowerRemoteAppName()];
         if(!watchNames.includes(appName)) return;
-        Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
+        Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false), loadFlowerFromSupabase(false)]).then(results => { if(results.some(Boolean)){renderAll();renderFlower();} });
       })
       .subscribe(status => {
         if(status === 'SUBSCRIBED') updateSupabaseStatus('已連線（即時同步中）');
@@ -4516,6 +4639,21 @@
     }
   }
 
+  async function saveFlowerToSupabaseNow(){
+    if(!supabaseClient || !syncEnabled || isApplyingRemote) return false;
+    const payload={app_name:getFlowerRemoteAppName(),state_json:normalizeFlowerState(flowerState),memo_text:'',updated_at:new Date().toISOString()};
+    try{
+      const {data,error}=await updateOrInsertSupabaseRow(payload);
+      if(error)throw error;
+      lastFlowerRemoteUpdatedAt=(data&&data.updated_at)||payload.updated_at;
+      return true;
+    }catch(err){
+      console.error('花花資料同步失敗',err);
+      showSupabaseError('同步失敗',err);
+      return false;
+    }
+  }
+
   function scheduleSupabaseSave(){
     if(!supabaseClient || !syncEnabled) return;
     if(remoteSaveTimer) clearTimeout(remoteSaveTimer);
@@ -4524,6 +4662,7 @@
       saveShaoweiProfileToSupabaseNow();
       saveSharedToSupabaseNow();
       saveLihuiNotepadToSupabaseNow();
+      saveFlowerToSupabaseNow();
     }, 120);
   }
 
@@ -4701,6 +4840,27 @@
     }
   }
 
+  async function loadFlowerFromSupabase(forceApply = true){
+    if(!supabaseClient)return false;
+    try{
+      const result=await fetchSupabaseRowLatest(getFlowerRemoteAppName(),'state_json,updated_at');
+      if(result&&result.error)throw result.error;
+      const row=result&&result.row;
+      if(!row){await saveFlowerToSupabaseNow();return false;}
+      const remoteUpdatedAt=row.updated_at||'';
+      if(!forceApply&&lastFlowerRemoteUpdatedAt&&remoteUpdatedAt&&remoteUpdatedAt<=lastFlowerRemoteUpdatedAt)return false;
+      flowerState=normalizeFlowerState(row.state_json);
+      lastFlowerRemoteUpdatedAt=remoteUpdatedAt||lastFlowerRemoteUpdatedAt;
+      saveFlowerLocally();
+      renderFlower();
+      return true;
+    }catch(err){
+      console.error('花花資料讀取失敗',err);
+      showSupabaseError('讀取失敗',err);
+      return false;
+    }
+  }
+
   function persistShared(options = {}){
     saveAppStateLocally();
     saveStatus(options.statusText || '已儲存');
@@ -4728,10 +4888,11 @@
     const shaoweiLoaded = await loadShaoweiProfileFromSupabase(true);
     const sharedLoaded = await loadSharedFromSupabase(true);
     const notepadLoaded = await loadLihuiNotepadFromSupabase(true);
+    const flowerLoaded = await loadFlowerFromSupabase(true);
     ensureRecurringTasksForToday();
     renderAll();
     startRemoteSubscription();
-    if((loaded || shaoweiLoaded || sharedLoaded || notepadLoaded) && !lastSupabaseErrorDetail){
+    if((loaded || shaoweiLoaded || sharedLoaded || notepadLoaded || flowerLoaded) && !lastSupabaseErrorDetail){
       updateSupabaseStatus('已連線（即時同步中）');
     }else if(!loaded && !sharedLoaded && !lastSupabaseErrorDetail){
       updateSupabaseStatus('已連線（尚無雲端資料）');
@@ -4748,6 +4909,7 @@
     lastRemoteUpdatedAt = '';
     lastShaoweiRemoteUpdatedAt = '';
     lastNotepadRemoteUpdatedAt = '';
+    lastFlowerRemoteUpdatedAt = '';
     lastSharedRemoteUpdatedAt = '';
     updateSupabaseStatus('預設隱藏');
     updateLastSyncText('');
@@ -4763,11 +4925,13 @@
     const saveShaoweiOk = await saveShaoweiProfileToSupabaseNow();
     const saveSharedOk = await saveSharedToSupabaseNow();
     const saveNotepadOk = await saveLihuiNotepadToSupabaseNow();
+    const saveFlowerOk = await saveFlowerToSupabaseNow();
     const loadMainOk = await loadFromSupabase(false);
     const loadShaoweiOk = await loadShaoweiProfileFromSupabase(false);
     const loadSharedOk = await loadSharedFromSupabase(false);
     const loadNotepadOk = await loadLihuiNotepadFromSupabase(false);
-    if(saveMainOk || saveShaoweiOk || saveSharedOk || saveNotepadOk || loadMainOk || loadShaoweiOk || loadSharedOk || loadNotepadOk){
+    const loadFlowerOk = await loadFlowerFromSupabase(false);
+    if(saveMainOk || saveShaoweiOk || saveSharedOk || saveNotepadOk || saveFlowerOk || loadMainOk || loadShaoweiOk || loadSharedOk || loadNotepadOk || loadFlowerOk){
       updateSupabaseStatus('已連線（即時同步中）');
     }else if(!lastSupabaseErrorDetail){
       updateSupabaseStatus('已連線（尚無雲端資料）');
@@ -5005,6 +5169,44 @@
     saveAppStateLocally();
     scheduleSupabaseSave();
   });
+  document.getElementById('showLihuiBtn')?.addEventListener('click',()=>showPersonPage('lihui'));
+  document.getElementById('showFlowerBtn')?.addEventListener('click',()=>showPersonPage('flower'));
+  document.getElementById('flowerMemoLeft')?.addEventListener('input',event=>{
+    flowerState.memoLeft=event.target.value||'';
+    saveFlowerLocally();
+    scheduleSupabaseSave();
+  });
+  document.getElementById('flowerMemoRight')?.addEventListener('input',event=>{
+    flowerState.memoRight=event.target.value||'';
+    saveFlowerLocally();
+    scheduleSupabaseSave();
+  });
+  document.getElementById('flowerAddBtn')?.addEventListener('click',()=>{
+    const dateInput=document.getElementById('flowerDateInput');
+    const itemInput=document.getElementById('flowerItemInput');
+    const date=dateInput&&dateInput.value||'';
+    const item=itemInput&&itemInput.value.trim()||'';
+    if(!date||!item){alert('請輸入日期與項目');return;}
+    flowerState.todos.push({id:`flower_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,date,item,done:false,handoff:''});
+    itemInput.value='';
+    persistFlower();
+  });
+  document.getElementById('flowerItemInput')?.addEventListener('keydown',event=>{
+    if(event.key==='Enter'){event.preventDefault();document.getElementById('flowerAddBtn')?.click();}
+  });
+  document.getElementById('flowerTodoBody')?.addEventListener('click',event=>{
+    const button=event.target.closest('[data-flower-action="done"]');
+    if(!button)return;
+    const row=button.closest('[data-flower-id]');
+    const todo=flowerState.todos.find(item=>item.id===row?.dataset.flowerId);
+    if(todo){todo.done=!todo.done;persistFlower();}
+  });
+  document.getElementById('flowerTodoBody')?.addEventListener('input',event=>{
+    if(!event.target.classList.contains('flowerHandoff'))return;
+    const row=event.target.closest('[data-flower-id]');
+    const todo=flowerState.todos.find(item=>item.id===row?.dataset.flowerId);
+    if(todo){todo.handoff=event.target.value||'';saveFlowerLocally();scheduleSupabaseSave();}
+  });
   els.btnConnect.addEventListener('click', connectSupabase);
   els.btnSync.addEventListener('click', syncNow);
   els.btnDisconnect.addEventListener('click', disconnectSupabase);
@@ -5063,13 +5265,13 @@
 
   document.addEventListener('visibilitychange', () => {
     if(document.visibilityState === 'visible' && supabaseClient && syncEnabled){
-      Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
+      Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false), loadFlowerFromSupabase(false)]).then(results => { if(results.some(Boolean)){renderAll();renderFlower();} });
     }
   });
 
   window.addEventListener('online', () => {
     if(supabaseClient && syncEnabled){
-      Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false)]).then(results => { if(results.some(Boolean)) renderAll(); });
+      Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false), loadFlowerFromSupabase(false)]).then(results => { if(results.some(Boolean)){renderAll();renderFlower();} });
     }
   });
 
@@ -5090,6 +5292,7 @@
       await loadShaoweiProfileFromSupabase();
       await loadSharedFromSupabase();
       await loadLihuiNotepadFromSupabase();
+      await loadFlowerFromSupabase();
       startRemoteSubscription();
       return true;
     }catch(err){
@@ -5105,6 +5308,8 @@
   currentProfile = DEFAULT_PROFILE;
   bindStateFromProfile();
   setupUnifiedLayout();
+  saveFlowerLocally();
+  renderFlower();
   loadMemo();
   loadHandoffMemo();
   loadTodoNote();
