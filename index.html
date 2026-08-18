@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V124：花花記事本從兩欄改為三欄同步 -->
+<!-- V125：花花恢復兩欄，麗卉記事本改為三欄同步 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V124</title>
+<title>麗卉待辦 V125</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -606,7 +606,7 @@
   .swNotepadHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .swNotepadHead b{font-size:20px;color:#3730a3;}
   .swNotepadHead span{font-size:13px;color:#64748b;font-weight:900;}
-  .swNotepadGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .swNotepadGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
   .swNotepadBox{width:100%;min-height:calc(8 * 1.7em + 28px);resize:vertical;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#1e293b;padding:14px 15px;font-family:"Microsoft JhengHei","Noto Sans TC",Consolas,sans-serif;font-size:19px;font-weight:700;line-height:1.7;letter-spacing:.01em;outline:none;}
   .swNotepadBox:focus{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(124,58,237,.12);}
   .swCompletedToggle{margin-left:auto;border:1px solid #c4b5fd;border-radius:999px;background:#f5f3ff;color:#6d28d9;padding:6px 11px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;}
@@ -672,6 +672,7 @@
   .supabaseHead,.calendarCard .cardHead{min-height:34px!important;padding:5px 14px!important;}
   .calendarCard .calendarTools .btn{padding:6px 10px!important;border-radius:11px!important;font-size:13px!important;}
   @media(max-width:900px){.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:repeat(2,minmax(0,1fr));}.swFlowGrid{grid-template-columns:repeat(2,minmax(0,1fr));}.swFixedGrid{grid-template-columns:1fr;}}
+  @media(max-width:950px){.swNotepadGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
   @media(max-width:700px){.swNotepadGrid{grid-template-columns:1fr;}}
   @media(max-width:560px){.swDailyWrap{padding:10px;}.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:1fr;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}.swSettingsTabs{grid-template-columns:1fr 1fr}.swSettingsAdd,.swSettingsRow{grid-template-columns:1fr}.swSettingsModal{max-height:94vh}}
 
@@ -686,7 +687,7 @@
   .flowerWrap{padding:16px;background:linear-gradient(180deg,#fff9fc,#f7fbff)}
   .flowerHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
   .flowerHead b{font-size:22px;color:#354052}.flowerHint{font-size:13px;color:#7a8496}
-  .flowerMemoGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+  .flowerMemoGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
   .flowerMemoBox{width:100%;height:112px;min-height:112px;box-sizing:border-box;resize:vertical;border:1px solid #e4bfd1;border-radius:15px;padding:10px 14px;font:15px/1.55 inherit;outline:none;background:#fff}
   .flowerMemoBox:focus{border-color:#de83ad;box-shadow:0 0 0 3px rgba(222,131,173,.13)}
   .flowerInputRow{display:grid;grid-template-columns:minmax(150px,210px) minmax(220px,1fr) auto;gap:10px;margin:12px 0}
@@ -710,7 +711,6 @@
   .flowerTable tr.done .flowerDoneBtn{background:#e8f4ea;border-color:#a9d2ae;color:#397344}
   .flowerHandoff{width:100%;min-width:210px;box-sizing:border-box;border:1px solid #dce2ec;border-radius:9px;padding:7px 9px;resize:vertical;font:14px/1.4 inherit}
   .flowerHandoffTime{color:#7b8493;font-size:12px;white-space:nowrap}
-  @media(max-width:950px){.flowerMemoGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:700px){.flowerMemoGrid{grid-template-columns:1fr}.flowerInputRow{grid-template-columns:1fr}.personSwitchBtn{padding:7px 11px}.flowerWrap{padding:11px}}
 
 </style>
@@ -721,7 +721,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V124</span>
+        <span class="pageTitleText">待辦清單 V125</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="personSwitch" aria-label="使用者切換">
             <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
@@ -739,7 +739,6 @@
       <div class="flowerMemoGrid">
         <textarea id="flowerMemoLeft" class="flowerMemoBox" rows="4" placeholder="記事欄 1"></textarea>
         <textarea id="flowerMemoRight" class="flowerMemoBox" rows="4" placeholder="記事欄 2"></textarea>
-        <textarea id="flowerMemoThird" class="flowerMemoBox" rows="4" placeholder="記事欄 3"></textarea>
       </div>
       <div class="flowerHead"><b>代辦事項</b><span class="flowerHint">日期與項目輸入後加入下方表格</span></div>
       <div class="flowerInputRow">
@@ -767,6 +766,7 @@
         <div class="swNotepadGrid">
           <textarea id="swDailyMemoBox" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
           <textarea id="swDailyMemoBox2" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
+          <textarea id="swDailyMemoBox3" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
         </div>
       </div>
 
@@ -1288,7 +1288,7 @@
     }
   }
 
-  function blankProfileState(){ return { tasks: [], memo: '', handoffMemo: '', todoNote: '', todoSchedule: defaultLihuiTodoSchedule() }; }
+  function blankProfileState(){ return { tasks: [], memo: '', handoffMemo: '', memoThird: '', todoNote: '', todoSchedule: defaultLihuiTodoSchedule() }; }
   function blankSharedState(){ return { tasks: [], sharedMemo: '', midOneItems: [] }; }
   function currentProfileName(){ return PROFILE_LABELS[currentProfile] || PROFILE_LABELS[DEFAULT_PROFILE]; }
   function profileLabel(key){ return PROFILE_LABELS[key] || ''; }
@@ -1368,6 +1368,7 @@
     if(data && Array.isArray(data.tasks)) base.tasks = repairRecurringTaskDates(data.tasks.map(normalizeLegacyTask).filter(t => t.title));
     base.memo = String(data && data.memo || '');
     base.handoffMemo = String(data && (data.handoffMemo ?? data.todoNote) || '');
+    base.memoThird = String(data && data.memoThird || '');
     base.todoNote = String(data && (data.todoNoteBox ?? data.boardNote ?? '') || '');
     base.todoSchedule = normalizeLihuiTodoSchedule(data && data.todoSchedule);
     return base;
@@ -1552,10 +1553,8 @@
   function renderFlower(){
     const left=document.getElementById('flowerMemoLeft');
     const right=document.getElementById('flowerMemoRight');
-    const third=document.getElementById('flowerMemoThird');
     if(left&&document.activeElement!==left)left.value=flowerState.memoLeft;
     if(right&&document.activeElement!==right)right.value=flowerState.memoRight;
-    if(third&&document.activeElement!==third)third.value=flowerState.memoThird;
     const body=document.getElementById('flowerTodoBody');
     if(!body)return;
     const sortedTodos=[...flowerState.todos.filter(todo=>!todo.done),...flowerState.todos.filter(todo=>todo.done)];
@@ -1695,6 +1694,8 @@
     if(memoBox&&document.activeElement!==memoBox&&memoBox.value!==String(mattersState.memo||''))memoBox.value=String(mattersState.memo||'');
     const memoBox2=document.getElementById('swDailyMemoBox2');
     if(memoBox2&&document.activeElement!==memoBox2&&memoBox2.value!==String(mattersState.handoffMemo||''))memoBox2.value=String(mattersState.handoffMemo||'');
+    const memoBox3=document.getElementById('swDailyMemoBox3');
+    if(memoBox3&&document.activeElement!==memoBox3&&memoBox3.value!==String(mattersState.memoThird||''))memoBox3.value=String(mattersState.memoThird||'');
     const now=new Date();
     const config=loadShaoweiConfig();
     const all=loadShaoweiDailyState();
@@ -4702,7 +4703,7 @@
     const profile=normalizeProfileState(appState.profiles.shaowei);
     const payload={
       app_name:getLihuiNotepadRemoteAppName(),
-      state_json:{memo:profile.memo||'',handoffMemo:profile.handoffMemo||''},
+      state_json:{memo:profile.memo||'',handoffMemo:profile.handoffMemo||'',memoThird:profile.memoThird||''},
       memo_text:profile.memo||'',
       updated_at:new Date().toISOString()
     };
@@ -4905,6 +4906,7 @@
       const profile=normalizeProfileState(appState.profiles.shaowei);
       profile.memo=String(row.state_json&&row.state_json.memo||row.memo_text||'');
       profile.handoffMemo=String(row.state_json&&row.state_json.handoffMemo||'');
+      profile.memoThird=String(row.state_json&&row.state_json.memoThird||'');
       appState.profiles.shaowei=profile;
       lastNotepadRemoteUpdatedAt=remoteUpdatedAt||lastNotepadRemoteUpdatedAt;
       saveAppStateLocally();
@@ -5248,6 +5250,13 @@
     saveAppStateLocally();
     scheduleSupabaseSave();
   });
+  const swDailyMemoBox3=document.getElementById('swDailyMemoBox3');
+  if(swDailyMemoBox3)swDailyMemoBox3.addEventListener('input',()=>{
+    ensureProfileContainer();
+    appState.profiles.shaowei.memoThird=swDailyMemoBox3.value||'';
+    saveAppStateLocally();
+    scheduleSupabaseSave();
+  });
   document.getElementById('showLihuiBtn')?.addEventListener('click',()=>showPersonPage('lihui'));
   document.getElementById('showFlowerBtn')?.addEventListener('click',()=>showPersonPage('flower'));
   document.getElementById('flowerMemoLeft')?.addEventListener('input',event=>{
@@ -5257,11 +5266,6 @@
   });
   document.getElementById('flowerMemoRight')?.addEventListener('input',event=>{
     flowerState.memoRight=event.target.value||'';
-    saveFlowerLocally();
-    scheduleSupabaseSave();
-  });
-  document.getElementById('flowerMemoThird')?.addEventListener('input',event=>{
-    flowerState.memoThird=event.target.value||'';
     saveFlowerLocally();
     scheduleSupabaseSave();
   });
