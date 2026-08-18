@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V123：花花編刪按鈕改為同列左右排列 -->
+<!-- V124：花花記事本從兩欄改為三欄同步 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V123</title>
+<title>麗卉待辦 V124</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -686,7 +686,7 @@
   .flowerWrap{padding:16px;background:linear-gradient(180deg,#fff9fc,#f7fbff)}
   .flowerHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
   .flowerHead b{font-size:22px;color:#354052}.flowerHint{font-size:13px;color:#7a8496}
-  .flowerMemoGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .flowerMemoGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
   .flowerMemoBox{width:100%;height:112px;min-height:112px;box-sizing:border-box;resize:vertical;border:1px solid #e4bfd1;border-radius:15px;padding:10px 14px;font:15px/1.55 inherit;outline:none;background:#fff}
   .flowerMemoBox:focus{border-color:#de83ad;box-shadow:0 0 0 3px rgba(222,131,173,.13)}
   .flowerInputRow{display:grid;grid-template-columns:minmax(150px,210px) minmax(220px,1fr) auto;gap:10px;margin:12px 0}
@@ -710,6 +710,7 @@
   .flowerTable tr.done .flowerDoneBtn{background:#e8f4ea;border-color:#a9d2ae;color:#397344}
   .flowerHandoff{width:100%;min-width:210px;box-sizing:border-box;border:1px solid #dce2ec;border-radius:9px;padding:7px 9px;resize:vertical;font:14px/1.4 inherit}
   .flowerHandoffTime{color:#7b8493;font-size:12px;white-space:nowrap}
+  @media(max-width:950px){.flowerMemoGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:700px){.flowerMemoGrid{grid-template-columns:1fr}.flowerInputRow{grid-template-columns:1fr}.personSwitchBtn{padding:7px 11px}.flowerWrap{padding:11px}}
 
 </style>
@@ -720,7 +721,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V123</span>
+        <span class="pageTitleText">待辦清單 V124</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="personSwitch" aria-label="使用者切換">
             <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
@@ -738,6 +739,7 @@
       <div class="flowerMemoGrid">
         <textarea id="flowerMemoLeft" class="flowerMemoBox" rows="4" placeholder="記事欄 1"></textarea>
         <textarea id="flowerMemoRight" class="flowerMemoBox" rows="4" placeholder="記事欄 2"></textarea>
+        <textarea id="flowerMemoThird" class="flowerMemoBox" rows="4" placeholder="記事欄 3"></textarea>
       </div>
       <div class="flowerHead"><b>代辦事項</b><span class="flowerHint">日期與項目輸入後加入下方表格</span></div>
       <div class="flowerInputRow">
@@ -1468,6 +1470,7 @@
     return {
       memoLeft:'',
       memoRight:'',
+      memoThird:'',
       todos:[{id:'flower_default_20260814',date:'2026-08-14',item:'NEW本封背',done:false,handoff:'',lastUpdatedAt:''}]
     };
   }
@@ -1477,6 +1480,7 @@
     return {
       memoLeft:String(data.memoLeft||''),
       memoRight:String(data.memoRight||''),
+      memoThird:String(data.memoThird||''),
       todos:Array.isArray(data.todos)?data.todos.map(todo=>({
         id:String(todo&&todo.id||`flower_${Date.now()}_${Math.random().toString(36).slice(2,7)}`),
         date:String(todo&&todo.date||''),
@@ -1548,8 +1552,10 @@
   function renderFlower(){
     const left=document.getElementById('flowerMemoLeft');
     const right=document.getElementById('flowerMemoRight');
+    const third=document.getElementById('flowerMemoThird');
     if(left&&document.activeElement!==left)left.value=flowerState.memoLeft;
     if(right&&document.activeElement!==right)right.value=flowerState.memoRight;
+    if(third&&document.activeElement!==third)third.value=flowerState.memoThird;
     const body=document.getElementById('flowerTodoBody');
     if(!body)return;
     const sortedTodos=[...flowerState.todos.filter(todo=>!todo.done),...flowerState.todos.filter(todo=>todo.done)];
@@ -5251,6 +5257,11 @@
   });
   document.getElementById('flowerMemoRight')?.addEventListener('input',event=>{
     flowerState.memoRight=event.target.value||'';
+    saveFlowerLocally();
+    scheduleSupabaseSave();
+  });
+  document.getElementById('flowerMemoThird')?.addEventListener('input',event=>{
+    flowerState.memoThird=event.target.value||'';
     saveFlowerLocally();
     scheduleSupabaseSave();
   });
