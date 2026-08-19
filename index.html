@@ -761,15 +761,6 @@
 
   <section class="card" id="shaoweiDailySection">
     <div class="swDailyWrap">
-      <div class="swNotepad" id="swNotepadSection">
-        <div class="swNotepadHead"><b>記事本</b><span>自動儲存・每天保留內容</span></div>
-        <div class="swNotepadGrid">
-          <textarea id="swDailyMemoBox" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
-          <textarea id="swDailyMemoBox2" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
-          <textarea id="swDailyMemoBox3" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
-        </div>
-      </div>
-
       <div class="swTodayHead" id="swTodayHead">
         <div>
           <div class="swTodayDate" id="swTodayDate"></div>
@@ -797,6 +788,15 @@
         </div>
         <div class="swFlowChoices" id="swFlowChoices"></div>
         </details>
+      </div>
+
+      <div class="swNotepad" id="swNotepadSection">
+        <div class="swNotepadHead"><b>記事本</b><span>自動儲存・每天保留內容</span></div>
+        <div class="swNotepadGrid">
+          <textarea id="swDailyMemoBox" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
+          <textarea id="swDailyMemoBox2" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
+          <textarea id="swDailyMemoBox3" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
+        </div>
       </div>
 
       <div class="swSection" id="swFixedSection">
@@ -2072,7 +2072,7 @@
     document.getElementById('lihuiMemoCard')?.remove();
     document.getElementById('midOneCard')?.remove();
     if(els.midOneTaskBtn) els.midOneTaskBtn.style.display='none';
-    [supabase,calendar,notepad,taskInput,todayList,todayFlow,fixed,taskList,month,noteCard,sharedMemo,repeat].forEach(el=>el&&page.appendChild(el));
+    [supabase,calendar,todayList,todayFlow,notepad,taskInput,fixed,taskList,month,noteCard,sharedMemo,repeat].forEach(el=>el&&page.appendChild(el));
     document.getElementById('shaoweiDailySection')?.remove();
     Array.from(page.children).forEach((element,index)=>{
       if(index>0&&element.id!=='flowerPage')element.classList.add('lihuiOnly');
