@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V128：右上 Supabase 浮動設定，麗卉記事本上方新增粉色記事條 -->
+<!-- V129：今日事項按鈕移到今日清單右上控制列 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V128</title>
+<title>麗卉待辦 V129</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -598,6 +598,9 @@
   .swTodayTitle{font-size:28px;font-weight:950;color:#312e81;letter-spacing:.02em;}
   .swTodayDate{margin:0;color:#475569;font-size:16px;font-weight:950;white-space:nowrap;}
   .swOpenCount{display:inline-flex;align-items:center;gap:7px;border:1px solid #fda4af;background:#fff1f2;color:#be123c;border-radius:999px;padding:9px 14px;font-size:15px;font-weight:950;box-shadow:0 4px 12px rgba(190,24,93,.08);}
+  .swTodayFlowToggle{border:1px solid #c4b5fd;background:#f5f3ff;color:#6d28d9;border-radius:12px;padding:9px 13px;font-size:15px;font-weight:950;cursor:pointer;white-space:nowrap;}
+  .swTodayFlowToggle.active{border-color:#8b5cf6;background:#ede9fe;color:#5b21b6;}
+  #swTodayFlowSection .unifiedFold>summary{display:none;}
   .swSection{border:1px solid #dbe3ef;border-radius:22px;background:#fff;overflow:hidden;box-shadow:0 8px 22px rgba(71,85,105,.08);}
   .swSectionHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(90deg,#faf5ff,#f8fafc);border-bottom:1px solid #e2e8f0;}
   .swSectionHead b{font-size:20px;color:#3730a3;}
@@ -729,7 +732,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V128</span>
+        <span class="pageTitleText">待辦清單 V129</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -774,7 +777,7 @@
         <div>
           <div class="swTodayDate" id="swTodayDate"></div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div class="swOpenCount">尚未完成 <span id="swOpenCount">0</span></div><button class="swSettingsBtn" id="swSettingsOpen" type="button">⚙ 事項設定</button></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><button class="swTodayFlowToggle" id="swTodayFlowToggle" type="button" aria-expanded="false" aria-controls="swTodayFlowSection">今日事項</button><div class="swOpenCount">尚未完成 <span id="swOpenCount">0</span></div><button class="swSettingsBtn" id="swSettingsOpen" type="button">⚙ 事項設定</button></div>
       </div>
 
       <div class="swSection" id="swTodayListSection">
@@ -2072,6 +2075,20 @@
     const todoNoteWrap=document.getElementById('todoNoteWrap');
     const sharedMemo=document.getElementById('sharedMemoCard');
     const repeat=document.getElementById('repeatSettingsCard');
+    const todayFlowToggle=document.getElementById('swTodayFlowToggle');
+    const todayFlowDetails=todayFlow?.querySelector('details');
+    if(todayFlowToggle&&todayFlowDetails){
+      const syncTodayFlowToggle=()=>{
+        todayFlowToggle.classList.toggle('active',todayFlowDetails.open);
+        todayFlowToggle.setAttribute('aria-expanded',todayFlowDetails.open?'true':'false');
+      };
+      todayFlowToggle.addEventListener('click',()=>{
+        todayFlowDetails.open=!todayFlowDetails.open;
+        syncTodayFlowToggle();
+      });
+      todayFlowDetails.addEventListener('toggle',syncTodayFlowToggle);
+      syncTodayFlowToggle();
+    }
     if(todayHead&&todayList){
       const sectionHead=todayList.querySelector('.swSectionHead');
       const date=todayHead.querySelector('#swTodayDate');
