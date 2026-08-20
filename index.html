@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V125：花花恢復兩欄，麗卉記事本改為三欄同步 -->
+<!-- V126：麗卉今日清單標題日期控制整併，事項時間同行 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V125</title>
+<title>麗卉待辦 V126</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -596,11 +596,12 @@
   .swDailyWrap{display:grid;gap:18px;padding:18px;background:linear-gradient(145deg,#fff7fb 0%,#f5f3ff 48%,#eff6ff 100%);}
   .swTodayHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .swTodayTitle{font-size:28px;font-weight:950;color:#312e81;letter-spacing:.02em;}
-  .swTodayDate{margin-top:5px;color:#64748b;font-size:16px;font-weight:900;}
+  .swTodayDate{margin:0;color:#475569;font-size:16px;font-weight:950;white-space:nowrap;}
   .swOpenCount{display:inline-flex;align-items:center;gap:7px;border:1px solid #fda4af;background:#fff1f2;color:#be123c;border-radius:999px;padding:9px 14px;font-size:15px;font-weight:950;box-shadow:0 4px 12px rgba(190,24,93,.08);}
   .swSection{border:1px solid #dbe3ef;border-radius:22px;background:#fff;overflow:hidden;box-shadow:0 8px 22px rgba(71,85,105,.08);}
   .swSectionHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(90deg,#faf5ff,#f8fafc);border-bottom:1px solid #e2e8f0;}
   .swSectionHead b{font-size:20px;color:#3730a3;}
+  .swTodayUnifiedHead{justify-content:flex-start;flex-wrap:nowrap}.swTodayUnifiedHead>div:last-child{margin-left:auto;display:flex!important;align-items:center;gap:10px;flex-wrap:nowrap!important}
   .swSectionHint{font-size:14px;color:#64748b;font-weight:900;}
   .swNotepad{display:grid;gap:8px;padding:14px 16px;border:1px solid #dbe3ef;border-radius:20px;background:#fff;box-shadow:0 7px 20px rgba(71,85,105,.08);}
   .swNotepadHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
@@ -674,7 +675,8 @@
   @media(max-width:900px){.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:repeat(2,minmax(0,1fr));}.swFlowGrid{grid-template-columns:repeat(2,minmax(0,1fr));}.swFixedGrid{grid-template-columns:1fr;}}
   @media(max-width:950px){.swNotepadGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
   @media(max-width:700px){.swNotepadGrid{grid-template-columns:1fr;}}
-  @media(max-width:560px){.swDailyWrap{padding:10px;}.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:1fr;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTaskRow{grid-template-columns:auto minmax(0,1fr);}.swTaskBadge{grid-column:2;justify-self:start;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}.swSettingsTabs{grid-template-columns:1fr 1fr}.swSettingsAdd,.swSettingsRow{grid-template-columns:1fr}.swSettingsModal{max-height:94vh}}
+  @media(max-width:700px){.swTodayUnifiedHead{flex-wrap:wrap}.swTodayUnifiedHead>div:last-child{margin-left:0;width:100%;justify-content:flex-end}}
+  @media(max-width:560px){.swDailyWrap{padding:10px;}.swTodayList,.swMonthList,.swFlowChoices{grid-template-columns:1fr;}.swFlowGrid{grid-template-columns:1fr 1fr;padding:10px;}.swTodayTitle{font-size:24px}.swSectionHead b{font-size:18px}.swSectionHint{font-size:13px}.swSettingsTabs{grid-template-columns:1fr 1fr}.swSettingsAdd,.swSettingsRow{grid-template-columns:1fr}.swSettingsModal{max-height:94vh}}
 
   .personSwitch{display:flex;gap:7px;padding:4px;background:#f3f5f8;border-radius:13px}
   .personSwitchBtn{border:0;border-radius:10px;padding:7px 15px;background:transparent;color:#657085;font-weight:800;cursor:pointer}
@@ -721,7 +723,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V125</span>
+        <span class="pageTitleText">待辦清單 V126</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="personSwitch" aria-label="使用者切換">
             <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
@@ -769,7 +771,7 @@
       </div>
 
       <div class="swSection" id="swTodayListSection">
-        <div class="swSectionHead"><b>今日清單</b><span class="swSectionHint">固定提醒自動出現；案件流程有需要才加入</span><button class="swCompletedToggle" id="swCompletedToggle" type="button">顯示已完成</button></div>
+        <div class="swSectionHead"><b>今日清單</b><button class="swCompletedToggle" id="swCompletedToggle" type="button">顯示已完成</button></div>
         <div class="swTodayList" id="swTodayList"></div>
       </div>
 
@@ -1668,8 +1670,8 @@
     const now=new Date();
     const config=loadShaoweiConfig();
     const rows=[];
-    config.today.forEach((item,i)=>rows.push({key:`fixed|today|${i}`,title:item.title,meta:'每天',badge:item.badge||'今日'}));
-    config.weekly.filter(item=>Number(item.day)===now.getDay()).forEach((item,i)=>rows.push({key:`weekly|${now.getDay()}|${i}`,title:item.title,meta:'固定提醒',badge:item.badge||`星期${'日一二三四五六'[now.getDay()]}`}));
+    config.today.forEach((item,i)=>rows.push({key:`fixed|today|${i}`,title:item.title,meta:'',badge:item.badge||'今日'}));
+    config.weekly.filter(item=>Number(item.day)===now.getDay()).forEach((item,i)=>rows.push({key:`weekly|${now.getDay()}|${i}`,title:item.title,meta:'',badge:item.badge||`星期${'日一二三四五六'[now.getDay()]}`}));
     Object.entries(config.flows).forEach(([flow,titles])=>titles.forEach((title,i)=>{
       const key=`flow|${flow}|${i}`;
       const selected=(dayState.selectedItems||[]).includes(key);
@@ -1750,7 +1752,7 @@
     const list=document.getElementById('swTodayList');
     if(list){
       const visibleRows=swShowCompletedToday?rows:rows.filter(row=>!dayState.done[row.key]);
-      list.innerHTML=visibleRows.length?visibleRows.map(row=>`<div class="swTaskRow ${row.key.startsWith('flow|')?'hasRemove':''} ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.meta)}</small><input class="swTodayNote" type="text" data-sw-today-note="${escapeHtml(row.key)}" value="${escapeHtml(dayState.notes[row.key]||'')}" placeholder="備註欄"></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span>${row.key.startsWith('flow|')?`<button class="swTodayKeep ${row.retained?'active':''}" type="button" data-sw-keep="${escapeHtml(row.key)}">保</button><button class="swTodayRemove" type="button" data-sw-remove="${escapeHtml(row.key)}">刪</button>`:''}</div>`).join(''):`<div class="swEmpty">${rows.length?'今日項目已全部完成':'今天尚未加入案件流程'}</div>`;
+      list.innerHTML=visibleRows.length?visibleRows.map(row=>`<div class="swTaskRow ${row.key.startsWith('flow|')?'hasRemove':''} ${dayState.done[row.key]?'done':''}"><input type="checkbox" data-sw-done="${escapeHtml(row.key)}" ${dayState.done[row.key]?'checked':''}><span class="swTaskText"><strong>${escapeHtml(row.title)}</strong>${row.meta?`<small>${escapeHtml(row.meta)}</small>`:''}<input class="swTodayNote" type="text" data-sw-today-note="${escapeHtml(row.key)}" value="${escapeHtml(dayState.notes[row.key]||'')}" placeholder="備註欄"></span><span class="swTaskBadge">${escapeHtml(row.badge)}</span>${row.key.startsWith('flow|')?`<button class="swTodayKeep ${row.retained?'active':''}" type="button" data-sw-keep="${escapeHtml(row.key)}">保</button><button class="swTodayRemove" type="button" data-sw-remove="${escapeHtml(row.key)}">刪</button>`:''}</div>`).join(''):`<div class="swEmpty">${rows.length?'今日項目已全部完成':'今天尚未加入案件流程'}</div>`;
       list.querySelectorAll('[data-sw-done]').forEach(box=>box.onchange=()=>{
         dayState.done[box.dataset.swDone]=box.checked;
         if(box.checked)all.__retained=all.__retained.filter(key=>key!==box.dataset.swDone);
@@ -2059,7 +2061,17 @@
     const todoNoteWrap=document.getElementById('todoNoteWrap');
     const sharedMemo=document.getElementById('sharedMemoCard');
     const repeat=document.getElementById('repeatSettingsCard');
-    if(todayHead&&todayList) todayList.prepend(todayHead);
+    if(todayHead&&todayList){
+      const sectionHead=todayList.querySelector('.swSectionHead');
+      const date=todayHead.querySelector('#swTodayDate');
+      const controls=todayHead.lastElementChild;
+      if(sectionHead){
+        sectionHead.classList.add('swTodayUnifiedHead');
+        if(date)sectionHead.querySelector('b')?.after(date);
+        if(controls)sectionHead.appendChild(controls);
+      }
+      todayHead.remove();
+    }
     [notepad,todayList,todayFlow,fixed,month].forEach(el=>el&&el.classList.add('unifiedSection'));
     let noteCard=document.getElementById('unifiedTodoNoteCard');
     if(!noteCard&&todoNoteWrap){
