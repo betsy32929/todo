@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V126：麗卉今日清單標題日期控制整併，事項時間同行 -->
+<!-- V128：右上 Supabase 浮動設定，麗卉記事本上方新增粉色記事條 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V126</title>
+<title>麗卉待辦 V128</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -604,6 +604,8 @@
   .swTodayUnifiedHead{justify-content:flex-start;flex-wrap:nowrap}.swTodayUnifiedHead>div:last-child{margin-left:auto;display:flex!important;align-items:center;gap:10px;flex-wrap:nowrap!important}
   .swSectionHint{font-size:14px;color:#64748b;font-weight:900;}
   .swNotepad{display:grid;gap:8px;padding:14px 16px;border:1px solid #dbe3ef;border-radius:20px;background:#fff;box-shadow:0 7px 20px rgba(71,85,105,.08);}
+  .swTopMemoLine{width:100%;height:44px;min-height:44px;box-sizing:border-box;resize:vertical;border:1px solid #efb8cd;border-radius:12px;background:#fff0f5;color:#5d3446;padding:9px 13px;font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;font-size:17px;font-weight:700;line-height:1.45;outline:none}
+  .swTopMemoLine:focus{border-color:#df7fa6;box-shadow:0 0 0 3px rgba(223,127,166,.14)}
   .swNotepadHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .swNotepadHead b{font-size:20px;color:#3730a3;}
   .swNotepadHead span{font-size:13px;color:#64748b;font-weight:900;}
@@ -681,6 +683,10 @@
   .personSwitch{display:flex;gap:7px;padding:4px;background:#f3f5f8;border-radius:13px}
   .personSwitchBtn{border:0;border-radius:10px;padding:7px 15px;background:transparent;color:#657085;font-weight:800;cursor:pointer}
   .personSwitchBtn.active{background:#fff;color:#285ca8;box-shadow:0 2px 8px rgba(50,65,90,.14)}
+  .supabaseTopBtn{border:1px solid #d5b7c7;border-radius:11px;padding:8px 12px;background:#fff4f8;color:#8b4967;font-weight:900;cursor:pointer;white-space:nowrap}
+  .supabaseTopBtn.active{background:#d96f9b;color:#fff;border-color:#d96f9b}
+  .supabaseCard{display:none!important}
+  .supabaseCard.topPopupOpen{display:block!important;position:fixed;top:66px;right:16px;z-index:2600;width:min(820px,calc(100vw - 24px));max-height:calc(100vh - 82px);overflow:auto;border-radius:18px;box-shadow:0 22px 55px rgba(41,50,66,.28)}
   #flowerPage{display:none}
   #flowerPage.active{display:block}
   body[data-person-view="flower"] .lihuiOnly{display:none!important}
@@ -723,8 +729,9 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V126</span>
+        <span class="pageTitleText">待辦清單 V128</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
             <button class="personSwitchBtn active" id="showLihuiBtn" type="button">麗卉</button>
             <button class="personSwitchBtn" id="showFlowerBtn" type="button">花花</button>
@@ -793,6 +800,7 @@
       </div>
 
       <div class="swNotepad" id="swNotepadSection">
+        <textarea id="swTopMemoLine" class="swTopMemoLine" rows="1" aria-label="記事本上方記事"></textarea>
         <div class="swNotepadHead"><b>記事本</b><span>自動儲存・每天保留內容</span></div>
         <div class="swNotepadGrid">
           <textarea id="swDailyMemoBox" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
@@ -1290,7 +1298,7 @@
     }
   }
 
-  function blankProfileState(){ return { tasks: [], memo: '', handoffMemo: '', memoThird: '', todoNote: '', todoSchedule: defaultLihuiTodoSchedule() }; }
+  function blankProfileState(){ return { tasks: [], memo: '', handoffMemo: '', memoThird: '', topMemoLine: '', todoNote: '', todoSchedule: defaultLihuiTodoSchedule() }; }
   function blankSharedState(){ return { tasks: [], sharedMemo: '', midOneItems: [] }; }
   function currentProfileName(){ return PROFILE_LABELS[currentProfile] || PROFILE_LABELS[DEFAULT_PROFILE]; }
   function profileLabel(key){ return PROFILE_LABELS[key] || ''; }
@@ -1371,6 +1379,7 @@
     base.memo = String(data && data.memo || '');
     base.handoffMemo = String(data && (data.handoffMemo ?? data.todoNote) || '');
     base.memoThird = String(data && data.memoThird || '');
+    base.topMemoLine = String(data && data.topMemoLine || '');
     base.todoNote = String(data && (data.todoNoteBox ?? data.boardNote ?? '') || '');
     base.todoSchedule = normalizeLihuiTodoSchedule(data && data.todoSchedule);
     return base;
@@ -1698,6 +1707,8 @@
     if(memoBox2&&document.activeElement!==memoBox2&&memoBox2.value!==String(mattersState.handoffMemo||''))memoBox2.value=String(mattersState.handoffMemo||'');
     const memoBox3=document.getElementById('swDailyMemoBox3');
     if(memoBox3&&document.activeElement!==memoBox3&&memoBox3.value!==String(mattersState.memoThird||''))memoBox3.value=String(mattersState.memoThird||'');
+    const topMemoLine=document.getElementById('swTopMemoLine');
+    if(topMemoLine&&document.activeElement!==topMemoLine&&topMemoLine.value!==String(mattersState.topMemoLine||''))topMemoLine.value=String(mattersState.topMemoLine||'');
     const now=new Date();
     const config=loadShaoweiConfig();
     const all=loadShaoweiDailyState();
@@ -2087,7 +2098,7 @@
     [supabase,calendar,todayList,todayFlow,notepad,taskInput,fixed,taskList,month,noteCard,sharedMemo,repeat].forEach(el=>el&&page.appendChild(el));
     document.getElementById('shaoweiDailySection')?.remove();
     Array.from(page.children).forEach((element,index)=>{
-      if(index>0&&element.id!=='flowerPage')element.classList.add('lihuiOnly');
+      if(index>0&&element.id!=='flowerPage'&&element!==supabase)element.classList.add('lihuiOnly');
     });
   }
   async function switchProfile(profileKey){
@@ -4715,7 +4726,7 @@
     const profile=normalizeProfileState(appState.profiles.shaowei);
     const payload={
       app_name:getLihuiNotepadRemoteAppName(),
-      state_json:{memo:profile.memo||'',handoffMemo:profile.handoffMemo||'',memoThird:profile.memoThird||''},
+      state_json:{memo:profile.memo||'',handoffMemo:profile.handoffMemo||'',memoThird:profile.memoThird||'',topMemoLine:profile.topMemoLine||''},
       memo_text:profile.memo||'',
       updated_at:new Date().toISOString()
     };
@@ -4919,6 +4930,7 @@
       profile.memo=String(row.state_json&&row.state_json.memo||row.memo_text||'');
       profile.handoffMemo=String(row.state_json&&row.state_json.handoffMemo||'');
       profile.memoThird=String(row.state_json&&row.state_json.memoThird||'');
+      profile.topMemoLine=String(row.state_json&&row.state_json.topMemoLine||'');
       appState.profiles.shaowei=profile;
       lastNotepadRemoteUpdatedAt=remoteUpdatedAt||lastNotepadRemoteUpdatedAt;
       saveAppStateLocally();
@@ -5269,6 +5281,30 @@
     saveAppStateLocally();
     scheduleSupabaseSave();
   });
+  const swTopMemoLine=document.getElementById('swTopMemoLine');
+  if(swTopMemoLine)swTopMemoLine.addEventListener('input',()=>{
+    ensureProfileContainer();
+    appState.profiles.shaowei.topMemoLine=swTopMemoLine.value||'';
+    saveAppStateLocally();
+    scheduleSupabaseSave();
+  });
+  const supabaseTopToggle=document.getElementById('supabaseTopToggle');
+  const supabasePopupCard=document.querySelector('.supabaseCard');
+  function setSupabasePopupOpen(open){
+    const next=!!open;
+    supabasePopupCard?.classList.toggle('topPopupOpen',next);
+    supabaseTopToggle?.classList.toggle('active',next);
+    supabaseTopToggle?.setAttribute('aria-expanded',next?'true':'false');
+    const details=document.getElementById('supabaseDetails');
+    if(next&&details)details.open=true;
+  }
+  supabaseTopToggle?.addEventListener('click',event=>{
+    event.stopPropagation();
+    setSupabasePopupOpen(!supabasePopupCard?.classList.contains('topPopupOpen'));
+  });
+  supabasePopupCard?.addEventListener('click',event=>event.stopPropagation());
+  document.addEventListener('click',()=>setSupabasePopupOpen(false));
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')setSupabasePopupOpen(false);});
   document.getElementById('showLihuiBtn')?.addEventListener('click',()=>showPersonPage('lihui'));
   document.getElementById('showFlowerBtn')?.addEventListener('click',()=>showPersonPage('flower'));
   document.getElementById('flowerMemoLeft')?.addEventListener('input',event=>{
