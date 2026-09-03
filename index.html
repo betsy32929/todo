@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V131：粉色記事條改為25px，並防止雲端空白覆蓋現有文字 -->
+<!-- V132：今日清單有時間的項目提前1小時瀏覽器通知 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V131</title>
+<title>麗卉待辦 V132</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -600,6 +600,9 @@
   .swOpenCount{display:inline-flex;align-items:center;gap:7px;border:1px solid #fda4af;background:#fff1f2;color:#be123c;border-radius:999px;padding:9px 14px;font-size:15px;font-weight:950;box-shadow:0 4px 12px rgba(190,24,93,.08);}
   .swTodayFlowToggle{border:1px solid #c4b5fd;background:#f5f3ff;color:#6d28d9;border-radius:12px;padding:9px 13px;font-size:15px;font-weight:950;cursor:pointer;white-space:nowrap;}
   .swTodayFlowToggle.active{border-color:#8b5cf6;background:#ede9fe;color:#5b21b6;}
+  .swReminderBtn{border:1px solid #f9a8d4;background:#fdf2f8;color:#be185d;border-radius:12px;padding:9px 12px;font-size:14px;font-weight:950;cursor:pointer;white-space:nowrap;}
+  .swReminderBtn.enabled{border-color:#86efac;background:#f0fdf4;color:#15803d;}
+  .swReminderBtn.blocked{border-color:#d1d5db;background:#f3f4f6;color:#6b7280;}
   #swTodayFlowSection .unifiedFold>summary{display:none;}
   .swSection{border:1px solid #dbe3ef;border-radius:22px;background:#fff;overflow:hidden;box-shadow:0 8px 22px rgba(71,85,105,.08);}
   .swSectionHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(90deg,#faf5ff,#f8fafc);border-bottom:1px solid #e2e8f0;}
@@ -732,7 +735,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V131</span>
+        <span class="pageTitleText">待辦清單 V132</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -777,7 +780,7 @@
         <div>
           <div class="swTodayDate" id="swTodayDate"></div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><button class="swTodayFlowToggle" id="swTodayFlowToggle" type="button" aria-expanded="false" aria-controls="swTodayFlowSection">今日事項</button><div class="swOpenCount">尚未完成 <span id="swOpenCount">0</span></div><button class="swSettingsBtn" id="swSettingsOpen" type="button">⚙ 事項設定</button></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><button class="swTodayFlowToggle" id="swTodayFlowToggle" type="button" aria-expanded="false" aria-controls="swTodayFlowSection">今日事項</button><div class="swOpenCount">尚未完成 <span id="swOpenCount">0</span></div><button class="swSettingsBtn" id="swSettingsOpen" type="button">⚙ 事項設定</button><button class="swReminderBtn" id="swReminderBtn" type="button">🔔 開啟提醒</button></div>
       </div>
 
       <div class="swSection" id="swTodayListSection">
@@ -1608,6 +1611,7 @@
 
   const SHAOWEI_DAILY_KEY = 'todo_lihui_daily_v112';
   const SHAOWEI_CONFIG_KEY = 'todo_lihui_config_v112';
+  const SHAOWEI_NOTIFY_KEY = 'todo_lihui_notified_v132';
   const LEGACY_SHAOWEI_DAILY_KEY = 'todo_shaowei_daily_v89';
   const LEGACY_SHAOWEI_CONFIG_KEY = 'todo_shaowei_config_v98';
   const SHAOWEI_FLOW_TEMPLATES = {
@@ -1680,6 +1684,53 @@
       localStorage.removeItem(LEGACY_SHAOWEI_DAILY_KEY);
     }catch(e){}
   }
+  function shaoweiBadgeTime(value){
+    const match=String(value||'').match(/(?:^|\s)([01]?\d|2[0-3]):([0-5]\d)(?:\s|$)/);
+    return match?{hour:Number(match[1]),minute:Number(match[2]),text:`${String(Number(match[1])).padStart(2,'0')}:${match[2]}`}:null;
+  }
+  function updateShaoweiReminderButton(){
+    const button=document.getElementById('swReminderBtn');
+    if(!button)return;
+    const supported='Notification' in window;
+    const permission=supported?Notification.permission:'unsupported';
+    button.classList.toggle('enabled',permission==='granted');
+    button.classList.toggle('blocked',permission==='denied'||permission==='unsupported');
+    button.textContent=permission==='granted'?'🔔 提醒已開啟':permission==='denied'?'🔕 通知已封鎖':permission==='unsupported'?'🔕 不支援通知':'🔔 開啟提醒';
+  }
+  async function enableShaoweiReminders(){
+    if(!('Notification' in window)){updateShaoweiReminderButton();return;}
+    if(Notification.permission==='default')await Notification.requestPermission();
+    updateShaoweiReminderButton();
+    checkShaoweiOneHourReminders();
+  }
+  function checkShaoweiOneHourReminders(now=new Date()){
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    const all=loadShaoweiDailyState();
+    if(!Array.isArray(all.__retained))all.__retained=[];
+    const dayKey=shaoweiLocalDateKey(now);
+    const dayState=all[dayKey]&&typeof all[dayKey]==='object'?all[dayKey]:{flows:[],selectedItems:[],done:{}};
+    if(!dayState.done||typeof dayState.done!=='object')dayState.done={};
+    const rows=shaoweiTodayItems(dayState,all.__retained);
+    let notified={};
+    try{notified=JSON.parse(localStorage.getItem(SHAOWEI_NOTIFY_KEY)||'{}')||{};}catch(e){}
+    Object.keys(notified).filter(key=>!key.startsWith(dayKey+'|')).forEach(key=>delete notified[key]);
+    rows.forEach(row=>{
+      if(dayState.done[row.key])return;
+      const time=shaoweiBadgeTime(row.badge);
+      if(!time)return;
+      const eventAt=new Date(now.getFullYear(),now.getMonth(),now.getDate(),time.hour,time.minute,0,0);
+      const remindAt=new Date(eventAt.getTime()-60*60*1000);
+      const noticeKey=`${dayKey}|${row.key}|${time.text}`;
+      if(now>=remindAt&&now<eventAt&&!notified[noticeKey]){
+        try{
+          const notice=new Notification('今日清單｜1小時後提醒',{body:`${time.text}　${row.title}`,tag:noticeKey});
+          notice.onclick=()=>{window.focus();notice.close();};
+          notified[noticeKey]=new Date().toISOString();
+        }catch(e){console.warn('此瀏覽器無法顯示系統通知',e);}
+      }
+    });
+    try{localStorage.setItem(SHAOWEI_NOTIFY_KEY,JSON.stringify(notified));}catch(e){}
+  }
   function shaoweiTodayItems(dayState,retainedItems=[]){
     const now=new Date();
     const config=loadShaoweiConfig();
@@ -1693,10 +1744,7 @@
       if(selected||retained)rows.push({key,title,meta:`序${Object.keys(config.flows).indexOf(flow)}・${flow}`,badge:retained?'保留':'今日',retained});
     }));
     return rows.map((row,index)=>({...row,_originalOrder:index})).sort((a,b)=>{
-      const timeValue=row=>{
-        const match=String(row.badge||'').match(/(?:^|\s)([01]?\d|2[0-3]):([0-5]\d)(?:\s|$)/);
-        return match?Number(match[1])*60+Number(match[2]):Number.POSITIVE_INFINITY;
-      };
+      const timeValue=row=>{const time=shaoweiBadgeTime(row.badge);return time?time.hour*60+time.minute:Number.POSITIVE_INFINITY;};
       return timeValue(a)-timeValue(b)||a._originalOrder-b._originalOrder;
     });
   }
@@ -5326,6 +5374,9 @@
     saveAppStateLocally();
     scheduleSupabaseSave();
   });
+  const swReminderBtn=document.getElementById('swReminderBtn');
+  if(swReminderBtn)swReminderBtn.addEventListener('click',enableShaoweiReminders);
+  updateShaoweiReminderButton();
   const supabaseTopToggle=document.getElementById('supabaseTopToggle');
   const supabasePopupCard=document.querySelector('.supabaseCard');
   function setSupabasePopupOpen(open){
@@ -5485,6 +5536,7 @@
   });
 
   document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible')checkShaoweiOneHourReminders();
     if(document.visibilityState === 'visible' && supabaseClient && syncEnabled){
       Promise.all([loadFromSupabase(false), loadShaoweiProfileFromSupabase(false), loadSharedFromSupabase(false), loadLihuiNotepadFromSupabase(false), loadFlowerFromSupabase(false)]).then(results => { if(results.some(Boolean)){renderAll();renderFlower();} });
     }
@@ -5541,6 +5593,8 @@
   renderAll();
   remoteLoadFinished = true;
   tryAutoConnectSupabase().then(changed => { if(changed) renderAll(); });
+  checkShaoweiOneHourReminders();
+  setInterval(checkShaoweiOneHourReminders, 30000);
   setInterval(renderClock, 1000);
 })();
 </script>
