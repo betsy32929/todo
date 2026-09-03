@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V132：今日清單有時間的項目提前1小時瀏覽器通知 -->
+<!-- V133：記事本上方粉紅區改為可依序號排序的項目清單 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V132</title>
+<title>麗卉待辦 V133</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -610,8 +610,15 @@
   .swTodayUnifiedHead{justify-content:flex-start;flex-wrap:nowrap}.swTodayUnifiedHead>div:last-child{margin-left:auto;display:flex!important;align-items:center;gap:10px;flex-wrap:nowrap!important}
   .swSectionHint{font-size:14px;color:#64748b;font-weight:900;}
   .swNotepad{display:grid;gap:8px;padding:14px 16px;border:1px solid #dbe3ef;border-radius:20px;background:#fff;box-shadow:0 7px 20px rgba(71,85,105,.08);}
-  .swTopMemoLine{width:100%;height:52px;min-height:52px;box-sizing:border-box;resize:vertical;border:1px solid #efb8cd;border-radius:12px;background:#fff0f5;color:#5d3446;padding:7px 13px;font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;font-size:25px;font-weight:700;line-height:1.45;outline:none}
-  .swTopMemoLine:focus{border-color:#df7fa6;box-shadow:0 0 0 3px rgba(223,127,166,.14)}
+  .swTopMemoPanel{padding:10px;border:1px solid #efb8cd;border-radius:12px;background:#fff0f5;display:grid;gap:8px}
+  .swTopMemoAdd,.swTopMemoRow{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:8px;align-items:center}
+  .swTopMemoInput{width:100%;height:46px;box-sizing:border-box;border:1px solid #edbfd1;border-radius:9px;background:#fff;color:#5d3446;padding:6px 10px;font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;font-size:25px;font-weight:700;outline:none}
+  .swTopMemoOrder{font-size:20px;text-align:center}
+  .swTopMemoInput:focus{border-color:#df7fa6;box-shadow:0 0 0 3px rgba(223,127,166,.14)}
+  .swTopMemoAddBtn,.swTopMemoDelete{height:42px;border:1px solid #e69ab8;border-radius:9px;background:#fff;color:#ad3e69;padding:0 12px;font-weight:950;cursor:pointer;white-space:nowrap}
+  .swTopMemoDelete{border-color:#fecdd3;color:#be123c;background:#fff7f8}
+  .swTopMemoList{display:grid;gap:7px}
+  @media(max-width:560px){.swTopMemoAdd,.swTopMemoRow{grid-template-columns:65px minmax(0,1fr) auto}.swTopMemoInput{font-size:21px}.swTopMemoOrder{font-size:18px}.swTopMemoAddBtn,.swTopMemoDelete{padding:0 9px}}
   .swNotepadHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .swNotepadHead b{font-size:20px;color:#3730a3;}
   .swNotepadHead span{font-size:13px;color:#64748b;font-weight:900;}
@@ -735,7 +742,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V132</span>
+        <span class="pageTitleText">待辦清單 V133</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -806,7 +813,10 @@
       </div>
 
       <div class="swNotepad" id="swNotepadSection">
-        <textarea id="swTopMemoLine" class="swTopMemoLine" rows="1" aria-label="記事本上方記事"></textarea>
+        <div class="swTopMemoPanel">
+          <div class="swTopMemoAdd"><input id="swTopMemoNewOrder" class="swTopMemoInput swTopMemoOrder" type="number" min="0" step="1" placeholder="序號" aria-label="新增序號"><input id="swTopMemoNewItem" class="swTopMemoInput" type="text" placeholder="項目" aria-label="新增項目"><button id="swTopMemoAddBtn" class="swTopMemoAddBtn" type="button">新增</button></div>
+          <div id="swTopMemoList" class="swTopMemoList"></div>
+        </div>
         <div class="swNotepadHead"><b>記事本</b><span>自動儲存・每天保留內容</span></div>
         <div class="swNotepadGrid">
           <textarea id="swDailyMemoBox" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
@@ -1207,8 +1217,8 @@
   let lastSharedRemoteUpdatedAt = '';
   let lastShaoweiRemoteUpdatedAt = '';
   let lastNotepadRemoteUpdatedAt = '';
-  let lastLoadedTopMemoLine = '';
-  let topMemoLineUserEdited = false;
+  let lastLoadedTopMemoItems = [];
+  let topMemoItemsUserEdited = false;
   let lastFlowerRemoteUpdatedAt = '';
   let lastSupabaseErrorDetail = '';
   let mainDatePicker = null;
@@ -1306,7 +1316,17 @@
     }
   }
 
-  function blankProfileState(){ return { tasks: [], memo: '', handoffMemo: '', memoThird: '', topMemoLine: '', todoNote: '', todoSchedule: defaultLihuiTodoSchedule() }; }
+  function normalizeTopMemoItems(items,legacyText=''){
+    const source=Array.isArray(items)?items:[];
+    const normalized=source.map((entry,index)=>({
+      id:String(entry&&entry.id||`top-memo-${index}`),
+      order:Number.isFinite(Number(entry&&entry.order))?Number(entry.order):index+1,
+      item:String(entry&&(entry.item??entry.text)||'').trim()
+    })).filter(entry=>entry.item);
+    if(!normalized.length&&String(legacyText||'').trim())normalized.push({id:'top-memo-legacy',order:1,item:String(legacyText).trim()});
+    return normalized.sort((a,b)=>a.order-b.order||a.id.localeCompare(b.id));
+  }
+  function blankProfileState(){ return { tasks: [], memo: '', handoffMemo: '', memoThird: '', topMemoLine: '', topMemoItems: [], todoNote: '', todoSchedule: defaultLihuiTodoSchedule() }; }
   function blankSharedState(){ return { tasks: [], sharedMemo: '', midOneItems: [] }; }
   function currentProfileName(){ return PROFILE_LABELS[currentProfile] || PROFILE_LABELS[DEFAULT_PROFILE]; }
   function profileLabel(key){ return PROFILE_LABELS[key] || ''; }
@@ -1388,6 +1408,7 @@
     base.handoffMemo = String(data && (data.handoffMemo ?? data.todoNote) || '');
     base.memoThird = String(data && data.memoThird || '');
     base.topMemoLine = String(data && data.topMemoLine || '');
+    base.topMemoItems = normalizeTopMemoItems(data&&data.topMemoItems,base.topMemoLine);
     base.todoNote = String(data && (data.todoNoteBox ?? data.boardNote ?? '') || '');
     base.todoSchedule = normalizeLihuiTodoSchedule(data && data.todoSchedule);
     return base;
@@ -1748,6 +1769,72 @@
       return timeValue(a)-timeValue(b)||a._originalOrder-b._originalOrder;
     });
   }
+  function persistTopMemoItems(items,{rerender=false}={}){
+    ensureProfileContainer();
+    const profile=normalizeProfileState(appState.profiles.shaowei);
+    profile.topMemoItems=normalizeTopMemoItems(items);
+    profile.topMemoLine=profile.topMemoItems[0]?.item||'';
+    appState.profiles.shaowei=profile;
+    topMemoItemsUserEdited=true;
+    saveAppStateLocally();
+    scheduleSupabaseSave();
+    if(rerender)renderTopMemoItems(true);
+  }
+  let topMemoSortTimer=null;
+  function renderTopMemoItems(force=false){
+    const list=document.getElementById('swTopMemoList');
+    if(!list)return;
+    if(!force&&document.activeElement&&document.activeElement.closest?.('.swTopMemoPanel'))return;
+    ensureProfileContainer();
+    const profile=normalizeProfileState(appState.profiles.shaowei);
+    appState.profiles.shaowei=profile;
+    list.innerHTML=profile.topMemoItems.map(entry=>`<div class="swTopMemoRow" data-top-memo-id="${escapeHtml(entry.id)}"><input class="swTopMemoInput swTopMemoOrder" type="number" min="0" step="1" value="${escapeHtml(entry.order)}" aria-label="序號"><input class="swTopMemoInput swTopMemoItem" type="text" value="${escapeHtml(entry.item)}" aria-label="項目"><button class="swTopMemoDelete" type="button">刪除</button></div>`).join('');
+    list.querySelectorAll('.swTopMemoRow').forEach(row=>{
+      const id=row.dataset.topMemoId;
+      const orderInput=row.querySelector('.swTopMemoOrder');
+      const applyOrderChange=event=>{
+        const items=normalizeTopMemoItems(appState.profiles.shaowei.topMemoItems);
+        const target=items.find(entry=>entry.id===id);
+        if(target)target.order=Number.isFinite(Number(event.target.value))?Number(event.target.value):0;
+        persistTopMemoItems(items,{rerender:true});
+      };
+      orderInput.oninput=event=>{
+        if(topMemoSortTimer)clearTimeout(topMemoSortTimer);
+        const value=event.target.value;
+        topMemoSortTimer=setTimeout(()=>applyOrderChange({target:{value}}),650);
+      };
+      orderInput.onchange=event=>{
+        if(topMemoSortTimer)clearTimeout(topMemoSortTimer);
+        applyOrderChange(event);
+      };
+      orderInput.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();event.target.blur();}};
+      row.querySelector('.swTopMemoItem').oninput=event=>{
+        const items=normalizeTopMemoItems(appState.profiles.shaowei.topMemoItems);
+        const target=items.find(entry=>entry.id===id);
+        if(target)target.item=event.target.value;
+        ensureProfileContainer();
+        appState.profiles.shaowei.topMemoItems=items;
+        appState.profiles.shaowei.topMemoLine=items[0]?.item||'';
+        topMemoItemsUserEdited=true;
+        saveAppStateLocally();
+        scheduleSupabaseSave();
+      };
+      row.querySelector('.swTopMemoDelete').onclick=()=>persistTopMemoItems(profile.topMemoItems.filter(entry=>entry.id!==id),{rerender:true});
+    });
+  }
+  function addTopMemoItem(){
+    const orderInput=document.getElementById('swTopMemoNewOrder');
+    const itemInput=document.getElementById('swTopMemoNewItem');
+    const item=String(itemInput?.value||'').trim();
+    if(!item){itemInput?.focus();return;}
+    const current=normalizeTopMemoItems(appState.profiles.shaowei.topMemoItems,appState.profiles.shaowei.topMemoLine);
+    const nextOrder=current.length?Math.max(...current.map(entry=>Number(entry.order)||0))+1:1;
+    const order=String(orderInput?.value||'').trim()===''?nextOrder:Number(orderInput.value);
+    current.push({id:`top-memo-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,order:Number.isFinite(order)?order:nextOrder,item});
+    if(orderInput)orderInput.value='';
+    if(itemInput)itemInput.value='';
+    persistTopMemoItems(current,{rerender:true});
+  }
   let swShowCompletedToday=false;
   function renderShaoweiDailyBoard(){
     const section=document.getElementById('shaoweiDailySection');
@@ -1760,8 +1847,7 @@
     if(memoBox2&&document.activeElement!==memoBox2&&memoBox2.value!==String(mattersState.handoffMemo||''))memoBox2.value=String(mattersState.handoffMemo||'');
     const memoBox3=document.getElementById('swDailyMemoBox3');
     if(memoBox3&&document.activeElement!==memoBox3&&memoBox3.value!==String(mattersState.memoThird||''))memoBox3.value=String(mattersState.memoThird||'');
-    const topMemoLine=document.getElementById('swTopMemoLine');
-    if(topMemoLine&&document.activeElement!==topMemoLine&&topMemoLine.value!==String(mattersState.topMemoLine||''))topMemoLine.value=String(mattersState.topMemoLine||'');
+    renderTopMemoItems();
     const now=new Date();
     const config=loadShaoweiConfig();
     const all=loadShaoweiDailyState();
@@ -4791,13 +4877,15 @@
     if(!supabaseClient || !syncEnabled || isApplyingRemote) return false;
     ensureProfileContainer();
     const profile=normalizeProfileState(appState.profiles.shaowei);
-    const localTopMemoLine=String(profile.topMemoLine||'');
-    const safeTopMemoLine=!topMemoLineUserEdited&&!localTopMemoLine&&lastLoadedTopMemoLine?lastLoadedTopMemoLine:localTopMemoLine;
+    const localTopMemoItems=normalizeTopMemoItems(profile.topMemoItems,profile.topMemoLine);
+    const safeTopMemoItems=!topMemoItemsUserEdited&&!localTopMemoItems.length&&lastLoadedTopMemoItems.length?normalizeTopMemoItems(lastLoadedTopMemoItems):localTopMemoItems;
+    const safeTopMemoLine=safeTopMemoItems[0]?.item||'';
+    profile.topMemoItems=safeTopMemoItems;
     profile.topMemoLine=safeTopMemoLine;
     appState.profiles.shaowei=profile;
     const payload={
       app_name:getLihuiNotepadRemoteAppName(),
-      state_json:{memo:profile.memo||'',handoffMemo:profile.handoffMemo||'',memoThird:profile.memoThird||'',topMemoLine:safeTopMemoLine},
+      state_json:{memo:profile.memo||'',handoffMemo:profile.handoffMemo||'',memoThird:profile.memoThird||'',topMemoLine:safeTopMemoLine,topMemoItems:safeTopMemoItems},
       memo_text:profile.memo||'',
       updated_at:new Date().toISOString()
     };
@@ -4805,8 +4893,8 @@
       const {data,error}=await updateOrInsertSupabaseRow(payload);
       if(error) throw error;
       lastNotepadRemoteUpdatedAt=(data&&data.updated_at)||payload.updated_at;
-      lastLoadedTopMemoLine=safeTopMemoLine;
-      topMemoLineUserEdited=false;
+      lastLoadedTopMemoItems=normalizeTopMemoItems(safeTopMemoItems);
+      topMemoItemsUserEdited=false;
       return true;
     }catch(err){
       console.error('麗卉記事本同步失敗',err);
@@ -4970,6 +5058,9 @@
       // 事項資料與麗卉記事本分開同步，避免任一資料源互相覆寫。
       remoteShaowei.memo=currentShaowei.memo;
       remoteShaowei.handoffMemo=currentShaowei.handoffMemo;
+      remoteShaowei.memoThird=currentShaowei.memoThird;
+      remoteShaowei.topMemoLine=currentShaowei.topMemoLine;
+      remoteShaowei.topMemoItems=currentShaowei.topMemoItems;
       appState.profiles.shaowei=remoteShaowei;
       lastShaoweiRemoteUpdatedAt=remoteUpdatedAt||lastShaoweiRemoteUpdatedAt;
       saveAppStateLocally();
@@ -4984,7 +5075,7 @@
 
   async function loadLihuiNotepadFromSupabase(forceApply = true){
     if(!supabaseClient) return false;
-    let restoreTopMemoLineToCloud=false;
+    let restoreTopMemoItemsToCloud=false;
     try{
       const selectors=['state_json,memo_text,updated_at','state_json,memo_text','state_json'];
       let row=null;
@@ -5001,20 +5092,21 @@
       ensureProfileContainer();
       isApplyingRemote=true;
       const profile=normalizeProfileState(appState.profiles.shaowei);
-      const localTopMemoLine=String(profile.topMemoLine||'');
-      const remoteTopMemoLine=String(row.state_json&&row.state_json.topMemoLine||'');
+      const localTopMemoItems=normalizeTopMemoItems(profile.topMemoItems,profile.topMemoLine);
+      const remoteTopMemoItems=normalizeTopMemoItems(row.state_json&&row.state_json.topMemoItems,row.state_json&&row.state_json.topMemoLine);
       profile.memo=String(row.state_json&&row.state_json.memo||row.memo_text||'');
       profile.handoffMemo=String(row.state_json&&row.state_json.handoffMemo||'');
       profile.memoThird=String(row.state_json&&row.state_json.memoThird||'');
-      if(topMemoLineUserEdited){
-        profile.topMemoLine=localTopMemoLine;
-      }else if(remoteTopMemoLine||!localTopMemoLine){
-        profile.topMemoLine=remoteTopMemoLine;
+      if(topMemoItemsUserEdited){
+        profile.topMemoItems=localTopMemoItems;
+      }else if(remoteTopMemoItems.length||!localTopMemoItems.length){
+        profile.topMemoItems=remoteTopMemoItems;
       }else{
-        profile.topMemoLine=localTopMemoLine;
-        restoreTopMemoLineToCloud=true;
+        profile.topMemoItems=localTopMemoItems;
+        restoreTopMemoItemsToCloud=true;
       }
-      lastLoadedTopMemoLine=String(profile.topMemoLine||'');
+      profile.topMemoLine=profile.topMemoItems[0]?.item||'';
+      lastLoadedTopMemoItems=normalizeTopMemoItems(profile.topMemoItems);
       appState.profiles.shaowei=profile;
       lastNotepadRemoteUpdatedAt=remoteUpdatedAt||lastNotepadRemoteUpdatedAt;
       saveAppStateLocally();
@@ -5026,7 +5118,7 @@
       return false;
     }finally{
       isApplyingRemote=false;
-      if(restoreTopMemoLineToCloud)setTimeout(()=>saveLihuiNotepadToSupabaseNow(),0);
+      if(restoreTopMemoItemsToCloud)setTimeout(()=>saveLihuiNotepadToSupabaseNow(),0);
     }
   }
 
@@ -5366,14 +5458,9 @@
     saveAppStateLocally();
     scheduleSupabaseSave();
   });
-  const swTopMemoLine=document.getElementById('swTopMemoLine');
-  if(swTopMemoLine)swTopMemoLine.addEventListener('input',()=>{
-    ensureProfileContainer();
-    topMemoLineUserEdited=true;
-    appState.profiles.shaowei.topMemoLine=swTopMemoLine.value||'';
-    saveAppStateLocally();
-    scheduleSupabaseSave();
-  });
+  const swTopMemoAddBtn=document.getElementById('swTopMemoAddBtn');
+  if(swTopMemoAddBtn)swTopMemoAddBtn.addEventListener('click',addTopMemoItem);
+  document.getElementById('swTopMemoNewItem')?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();addTopMemoItem();}});
   const swReminderBtn=document.getElementById('swReminderBtn');
   if(swReminderBtn)swReminderBtn.addEventListener('click',enableShaoweiReminders);
   updateShaoweiReminderButton();
