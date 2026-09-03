@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V139：粉紅清單序號欄固定1公分並取消輸入框白底 -->
+<!-- V140：新增欄恢復白底，下方項目使用交錯淡色 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V139</title>
+<title>麗卉待辦 V140</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -614,6 +614,7 @@
   .swTopMemoAdd{display:grid;grid-template-columns:1cm minmax(0,1fr) auto;gap:8px;align-items:center}
   .swTopMemoRow{display:grid;grid-template-columns:1cm minmax(0,1fr) auto;gap:4px;align-items:center;min-width:0}
   .swTopMemoInput{width:100%;height:46px;box-sizing:border-box;border:1px solid #edbfd1;border-radius:9px;background:transparent;color:#5d3446;padding:6px 10px;font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;font-size:25px;font-weight:700;outline:none}
+  .swTopMemoAdd .swTopMemoInput{background:#fff}
   .swTopMemoOrder{font-size:20px;text-align:center}
   .swTopMemoOrder{-moz-appearance:textfield}
   .swTopMemoOrder::-webkit-inner-spin-button,.swTopMemoOrder::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -621,6 +622,11 @@
   .swTopMemoAddBtn,.swTopMemoDelete{height:42px;border:1px solid #e69ab8;border-radius:9px;background:#fff;color:#ad3e69;padding:0 12px;font-weight:950;cursor:pointer;white-space:nowrap}
   .swTopMemoDelete{border-color:#fecdd3;color:#be123c;background:#fff7f8}
   .swTopMemoList{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;min-width:0;overflow:visible}
+  .swTopMemoList .swTopMemoRow{padding:4px;border-radius:10px}
+  .swTopMemoList .swTopMemoRow:nth-child(4n+1){background:#ffe4ec}
+  .swTopMemoList .swTopMemoRow:nth-child(4n+2){background:#fff1cc}
+  .swTopMemoList .swTopMemoRow:nth-child(4n+3){background:#e0f2fe}
+  .swTopMemoList .swTopMemoRow:nth-child(4n){background:#e8f7e8}
   .swTopMemoRow .swTopMemoInput{font-size:19px}
   .swTopMemoRow .swTopMemoOrder{font-size:17px}
   .swTopMemoRow .swTopMemoDelete{padding:0 8px}
@@ -748,7 +754,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V139</span>
+        <span class="pageTitleText">待辦清單 V140</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
