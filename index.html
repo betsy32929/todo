@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V140：新增欄恢復白底，下方項目使用交錯淡色 -->
+<!-- V141：花花畫面移除日期，記事欄字體放大 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V140</title>
+<title>麗卉待辦 V141</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -721,17 +721,17 @@
   .flowerHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
   .flowerHead b{font-size:22px;color:#354052}.flowerHint{font-size:13px;color:#7a8496}
   .flowerMemoGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-  .flowerMemoBox{width:100%;height:112px;min-height:112px;box-sizing:border-box;resize:vertical;border:1px solid #e4bfd1;border-radius:15px;padding:10px 14px;font:15px/1.55 inherit;outline:none;background:#fff}
+  .flowerMemoBox{width:100%;height:112px;min-height:112px;box-sizing:border-box;resize:vertical;border:1px solid #e4bfd1;border-radius:15px;padding:10px 14px;font:18px/1.55 inherit;outline:none;background:#fff}
   .flowerMemoBox:focus{border-color:#de83ad;box-shadow:0 0 0 3px rgba(222,131,173,.13)}
-  .flowerInputRow{display:grid;grid-template-columns:minmax(150px,210px) minmax(220px,1fr) auto;gap:10px;margin:12px 0}
+  .flowerInputRow{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:10px;margin:12px 0}
   .flowerInput{border:1px solid #d7ddea;border-radius:12px;padding:10px 12px;font-size:15px;min-width:0}
   .flowerDateField{display:flex;flex-direction:column;gap:4px}.flowerDateField .flowerInput{width:100%;box-sizing:border-box}
   .flowerInput.invalid{border-color:#e24848!important;background:#fff1f1;color:#b42323;box-shadow:0 0 0 3px rgba(226,72,72,.12)}
   .flowerDateError{display:none;color:#d33131;font-size:12px;font-weight:800;padding-left:4px}.flowerDateError.show{display:block}
   .flowerAddBtn{border:0;border-radius:12px;padding:10px 18px;background:#df83ac;color:#fff;font-weight:900;cursor:pointer}
   .flowerTableWrap{overflow-x:auto;border:1px solid #e3e7ef;border-radius:14px;background:#fff}
-  .flowerTable{width:100%;border-collapse:collapse;min-width:1000px;table-layout:fixed}
-  .flowerTable col.flowerManageCol{width:88px}.flowerTable col.flowerDateCol{width:115px}.flowerTable col.flowerItemCol{width:32%}.flowerTable col.flowerDoneCol{width:82px}.flowerTable col.flowerHandoffCol{width:30%}.flowerTable col.flowerTimeCol{width:170px}
+  .flowerTable{width:100%;border-collapse:collapse;min-width:880px;table-layout:fixed}
+  .flowerTable col.flowerManageCol{width:88px}.flowerTable col.flowerItemCol{width:42%}.flowerTable col.flowerDoneCol{width:82px}.flowerTable col.flowerHandoffCol{width:32%}.flowerTable col.flowerTimeCol{width:170px}
   .flowerTable th,.flowerTable td{padding:10px 12px;border:1px solid #d7dce7;text-align:left;vertical-align:middle}
   .flowerTable th{background:#f8eaf1;color:#586274;font-size:14px}.flowerTable tr:last-child td{border-bottom:0}
   .flowerTable tbody tr{background:#fff1f5}.flowerTable tbody tr:nth-child(even){background:#f1f0ff}.flowerTable tbody tr.done{background:#eaf6ec}
@@ -754,7 +754,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V140</span>
+        <span class="pageTitleText">待辦清單 V141</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -774,19 +774,15 @@
         <textarea id="flowerMemoLeft" class="flowerMemoBox" rows="4" placeholder="記事欄 1"></textarea>
         <textarea id="flowerMemoRight" class="flowerMemoBox" rows="4" placeholder="記事欄 2"></textarea>
       </div>
-      <div class="flowerHead"><b>代辦事項</b><span class="flowerHint">日期與項目輸入後加入下方表格</span></div>
+      <div class="flowerHead"><b>代辦事項</b><span class="flowerHint">輸入項目後加入下方表格</span></div>
       <div class="flowerInputRow">
-        <div class="flowerDateField">
-          <input id="flowerDateInput" class="flowerInput" type="text" inputmode="numeric" placeholder="輸入日期，例如 8/14" aria-label="日期">
-          <span id="flowerDateError" class="flowerDateError">日期錯誤，請重新輸入</span>
-        </div>
         <input id="flowerItemInput" class="flowerInput" type="text" lang="zh-Hant" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="輸入項目" aria-label="項目">
         <button id="flowerAddBtn" class="flowerAddBtn" type="button">新增</button>
       </div>
       <div class="flowerTableWrap">
         <table class="flowerTable">
-          <colgroup><col class="flowerManageCol"><col class="flowerDateCol"><col class="flowerItemCol"><col class="flowerDoneCol"><col class="flowerHandoffCol"><col class="flowerTimeCol"></colgroup>
-          <thead><tr><th></th><th>日期</th><th>項目</th><th>操作</th><th>交接記事</th><th>最後修改</th></tr></thead>
+          <colgroup><col class="flowerManageCol"><col class="flowerItemCol"><col class="flowerDoneCol"><col class="flowerHandoffCol"><col class="flowerTimeCol"></colgroup>
+          <thead><tr><th></th><th>項目</th><th>操作</th><th>交接記事</th><th>最後修改</th></tr></thead>
           <tbody id="flowerTodoBody"></tbody>
         </table>
       </div>
@@ -1617,13 +1613,12 @@
         <td><div class="flowerManageBtns">${editing
           ?'<button class="flowerSaveBtn" type="button" data-flower-action="save">存</button><button class="flowerCancelBtn" type="button" data-flower-action="cancel">消</button>'
           :'<button class="flowerEditBtn" type="button" data-flower-action="edit">編</button><button class="flowerDeleteBtn" type="button" data-flower-action="delete">刪</button>'}</div></td>
-        <td>${editing?`<input class="flowerRowInput flowerRowDate" type="text" inputmode="numeric" value="${escapeHtml(flowerDateInputValue(todo.date))}" aria-label="編輯日期">`:escapeHtml(flowerDateLabel(todo.date))}</td>
         <td class="flowerItem">${editing?`<input class="flowerRowInput flowerRowItem" type="text" lang="zh-Hant" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${escapeHtml(todo.item)}" aria-label="編輯項目">`:escapeHtml(todo.item)}</td>
         <td><button class="flowerDoneBtn" type="button" data-flower-action="done">${todo.done?'已完成':'完成'}</button></td>
         <td><textarea class="flowerHandoff" rows="2" placeholder="輸入交接記事">${escapeHtml(todo.handoff)}</textarea></td>
         <td><span class="flowerHandoffTime">${escapeHtml(flowerHandoffTimeLabel(todo.lastUpdatedAt))}</span></td>
       </tr>`;
-    }).join(''):'<tr><td colspan="6" style="text-align:center;color:#929bad">目前沒有代辦事項</td></tr>';
+    }).join(''):'<tr><td colspan="5" style="text-align:center;color:#929bad">目前沒有代辦事項</td></tr>';
   }
   function persistFlower(){
     saveFlowerLocally();
@@ -5505,18 +5500,11 @@
     saveFlowerLocally();
     scheduleSupabaseSave();
   });
-  document.getElementById('flowerDateInput')?.addEventListener('input',()=>validateFlowerDateInput(false));
   document.getElementById('flowerAddBtn')?.addEventListener('click',()=>{
-    const dateInput=document.getElementById('flowerDateInput');
     const itemInput=document.getElementById('flowerItemInput');
-    const dateText=dateInput&&dateInput.value||'';
-    const date=normalizeFlowerDateInput(dateText);
     const item=itemInput&&itemInput.value.trim()||'';
-    if(!date){validateFlowerDateInput(true);dateInput.focus();return;}
     if(!item){alert('請輸入項目');return;}
-    flowerState.todos.push({id:`flower_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,date,item,done:false,handoff:'',lastUpdatedAt:new Date().toISOString()});
-    dateInput.value='';
-    validateFlowerDateInput(false);
+    flowerState.todos.push({id:`flower_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,date:'',item,done:false,handoff:'',lastUpdatedAt:new Date().toISOString()});
     itemInput.value='';
     persistFlower();
   });
@@ -5541,15 +5529,10 @@
       flowerEditingId='';
       renderFlower();
     }else if(action==='save'){
-      const dateInput=row.querySelector('.flowerRowDate');
       const itemInput=row.querySelector('.flowerRowItem');
-      const date=normalizeFlowerDateInput(dateInput&&dateInput.value);
       const item=String(itemInput&&itemInput.value||'').trim();
-      dateInput?.classList.toggle('invalid',!date);
       itemInput?.classList.toggle('invalid',!item);
-      if(!date){dateInput?.focus();return;}
       if(!item){itemInput?.focus();return;}
-      todo.date=date;
       todo.item=item;
       todo.lastUpdatedAt=new Date().toISOString();
       flowerEditingId='';
@@ -5562,10 +5545,6 @@
     }
   });
   document.getElementById('flowerTodoBody')?.addEventListener('input',event=>{
-    if(event.target.classList.contains('flowerRowDate')){
-      event.target.classList.toggle('invalid',!normalizeFlowerDateInput(event.target.value));
-      return;
-    }
     if(!event.target.classList.contains('flowerHandoff'))return;
     const row=event.target.closest('[data-flower-id]');
     const todo=flowerState.todos.find(item=>item.id===row?.dataset.flowerId);
