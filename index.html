@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V146：行事曆融入今日清單，行事曆事項可直接勾選完成 -->
+<!-- V147：每日清單直接合併到行事曆的每一天 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V146</title>
+<title>麗卉待辦 V147</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -111,6 +111,11 @@
   .event{width:100%;border-radius:16px;padding:9px 10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;background:#fff;color:#36404f;border:1px solid rgba(76,88,104,.12);line-height:1.45;font-size:13px;word-break:break-word;font-weight:900;box-shadow:0 1px 0 rgba(255,255,255,.9)}
   .calendarDoneCheck{width:20px;height:20px;margin:1px 0 0;accent-color:#7c3aed;cursor:pointer}
   .calendarEventOpen{border:0;padding:0;background:transparent;color:inherit;text-align:left;font:inherit;line-height:inherit;cursor:pointer;word-break:break-word}
+  .calendarDailyItem{width:100%;border-radius:14px;padding:8px 9px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;background:#f8f5ff;color:#3730a3;border:1px solid #ddd6fe;font-size:13px;font-weight:900}
+  .calendarDailyItem.done{background:#eef7ef;color:#7b8b7d;text-decoration:line-through}
+  .calendarDailyText{min-width:0;line-height:1.4;word-break:break-word}
+  .calendarDailyText small{display:block;margin-top:2px;color:#7c3aed;font-size:11px;text-decoration:none}
+  .calendarDailyNote{display:block;width:100%;box-sizing:border-box;margin-top:4px;border:0;border-bottom:1px solid #cbd5e1;background:transparent;color:#64748b;font-size:12px;outline:none}
   .event.done{background:var(--done-bg);color:var(--done-text);text-decoration:line-through}
   .event.overdue{color:var(--danger);background:#fbf1f3;border-color:#e8cfd6}
   .event .sub{display:block;margin-top:3px;font-size:12px;opacity:.88;font-weight:700;color:#5d6878}
@@ -609,7 +614,8 @@
   .swSection{border:1px solid #dbe3ef;border-radius:22px;background:#fff;overflow:hidden;box-shadow:0 8px 22px rgba(71,85,105,.08);}
   #swTodayListSection>.calendarCard{margin:0;border:0;border-bottom:1px solid #e2e8f0;border-radius:0;box-shadow:none;background:#f8f6f7;}
   #swTodayListSection>.calendarCard .cardHead{border-radius:0;}
-  .swDailyListSegmentTitle{padding:11px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#3730a3;font-size:18px;font-weight:950;}
+  #swTodayList{display:none!important}
+  #swTodayListSection .swCompletedToggle{display:none!important}
   .swSectionHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(90deg,#faf5ff,#f8fafc);border-bottom:1px solid #e2e8f0;}
   .swSectionHead b{font-size:20px;color:#3730a3;}
   .swTodayUnifiedHead{justify-content:flex-start;flex-wrap:nowrap}.swTodayUnifiedHead>div:last-child{margin-left:auto;display:flex!important;align-items:center;gap:10px;flex-wrap:nowrap!important}
@@ -738,7 +744,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V146</span>
+        <span class="pageTitleText">待辦清單 V147</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -1739,8 +1745,8 @@
     });
     try{localStorage.setItem(SHAOWEI_NOTIFY_KEY,JSON.stringify(notified));}catch(e){}
   }
-  function shaoweiTodayItems(dayState,retainedItems=[]){
-    const now=new Date();
+  function shaoweiTodayItems(dayState,retainedItems=[],targetDate=new Date()){
+    const now=targetDate instanceof Date&&!Number.isNaN(targetDate.getTime())?targetDate:new Date();
     const config=loadShaoweiConfig();
     const rows=[];
     config.today.forEach((item,i)=>rows.push({key:`fixed|today|${i}`,title:item.title,meta:'',badge:item.badge||'今日'}));
@@ -2226,11 +2232,7 @@
     if(calendar&&todayList){
       const dailyList=todayList.querySelector('#swTodayList');
       if(dailyList){
-        const dailyTitle=document.createElement('div');
-        dailyTitle.className='swDailyListSegmentTitle';
-        dailyTitle.textContent='每日清單';
         todayList.insertBefore(calendar,dailyList);
-        todayList.insertBefore(dailyTitle,dailyList);
       }
     }
     [notepad,todayList,todayFlow,fixed,month].forEach(el=>el&&el.classList.add('unifiedSection'));
@@ -4538,16 +4540,23 @@
   function renderCalendar(){
     if(!els.weekGrid) return;
     els.weekGrid.innerHTML = '';
+    const dailyStateAll=loadShaoweiDailyState();
+    if(!Array.isArray(dailyStateAll.__retained))dailyStateAll.__retained=[];
     for(let i = 0; i < 7; i++){
       const d = addDays(currentWeekStart, i);
       const key = dateKey(d);
       const list = calendarItemsForDay(key);
+      const dailyState=dailyStateAll[key]&&typeof dailyStateAll[key]==='object'?dailyStateAll[key]:{flows:[],selectedItems:[],done:{},notes:{}};
+      if(!Array.isArray(dailyState.selectedItems))dailyState.selectedItems=[];
+      if(!dailyState.done||typeof dailyState.done!=='object')dailyState.done={};
+      if(!dailyState.notes||typeof dailyState.notes!=='object')dailyState.notes={};
+      const dailyRows=shaoweiTodayItems(dailyState,dailyStateAll.__retained,d).filter(row=>!dailyState.done[row.key]);
       const day = document.createElement('div');
       day.className = 'day' + (key === todayStr() ? ' today' : '');
       day.innerHTML = `
         <div class="dayHead">${rocYear(d.getFullYear())}/${d.getMonth()+1}/${d.getDate()} ${weekMap[d.getDay()]}</div>
         <div class="dayBody">
-          ${list.length ? list.map(t => {
+          ${list.map(t => {
             const recurringMasterId = t.autoSpawnedFrom || t.sourceId || '';
             const recurringAttrs = recurringMasterId ? `data-recurring-master-id="${recurringMasterId}" data-occurrence-date="${t.occurrenceOriginalDate || t.dueDate || key}"` : '';
             const singleAttrs = recurringMasterId ? '' : (t.id ? `data-event-id="${t.id}"` : '');
@@ -4565,12 +4574,33 @@
                 ${t.calendarOnly ? `<span class="sub">行事曆模式</span>` : ''}
               </button>
             </div>`;
-          }).join('') : '<div class="statusText">—</div>'}
+          }).join('')}
+          ${dailyRows.map(row=>`
+            <div class="calendarDailyItem">
+              <input class="calendarDoneCheck" type="checkbox" aria-label="完成 ${escapeHtml(row.title)}" data-calendar-daily-date="${key}" data-calendar-daily-key="${escapeHtml(row.key)}">
+              <span class="calendarDailyText">${escapeHtml(row.title)}${row.badge?`<small>${escapeHtml(row.badge)}</small>`:''}<input class="calendarDailyNote" type="text" data-calendar-daily-note-date="${key}" data-calendar-daily-note-key="${escapeHtml(row.key)}" value="${escapeHtml(dailyState.notes[row.key]||'')}" placeholder="備註欄"></span>
+            </div>`).join('')}
+          ${!list.length&&!dailyRows.length?'<div class="statusText">—</div>':''}
         </div>`;
       els.weekGrid.appendChild(day);
     }
 
     document.querySelectorAll('.calendarDoneCheck').forEach(input => input.onchange = () => {
+      const dailyDate=input.dataset.calendarDailyDate||'';
+      const dailyKey=input.dataset.calendarDailyKey||'';
+      if(dailyDate&&dailyKey){
+        const all=loadShaoweiDailyState();
+        if(!Array.isArray(all.__retained))all.__retained=[];
+        const dayState=all[dailyDate]&&typeof all[dailyDate]==='object'?all[dailyDate]:{flows:[],selectedItems:[],done:{},notes:{}};
+        if(!dayState.done||typeof dayState.done!=='object')dayState.done={};
+        dayState.done[dailyKey]=input.checked;
+        if(input.checked)all.__retained=all.__retained.filter(key=>key!==dailyKey);
+        all[dailyDate]=dayState;
+        saveShaoweiDailyState(all);
+        renderShaoweiDailyBoard();
+        renderCalendar();
+        return;
+      }
       const taskId=input.dataset.calendarDoneId||'';
       if(taskId){
         const task=state.tasks.find(item=>item.id===taskId);
@@ -4585,6 +4615,17 @@
       }
       persist({statusText:input.checked?'已完成':'已恢復'});
       renderAll();
+    });
+    document.querySelectorAll('.calendarDailyNote').forEach(input=>input.oninput=()=>{
+      const dailyDate=input.dataset.calendarDailyNoteDate||'';
+      const dailyKey=input.dataset.calendarDailyNoteKey||'';
+      if(!dailyDate||!dailyKey)return;
+      const all=loadShaoweiDailyState();
+      const dayState=all[dailyDate]&&typeof all[dailyDate]==='object'?all[dailyDate]:{flows:[],selectedItems:[],done:{},notes:{}};
+      if(!dayState.notes||typeof dayState.notes!=='object')dayState.notes={};
+      dayState.notes[dailyKey]=input.value;
+      all[dailyDate]=dayState;
+      saveShaoweiDailyState(all);
     });
     document.querySelectorAll('.calendarEventOpen[data-recurring-master-id]').forEach(btn => btn.onclick = () => {
       openRecurringModal(btn.dataset.recurringMasterId, btn.dataset.occurrenceDate);
