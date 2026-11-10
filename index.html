@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V147：每日清單直接合併到行事曆的每一天 -->
+<!-- V148：移除固定提醒顯示區塊，設定仍保留 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V147</title>
+<title>麗卉待辦 V148</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -744,7 +744,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V147</span>
+        <span class="pageTitleText">待辦清單 V148</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -816,20 +816,6 @@
           <textarea id="swDailyMemoBox" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
           <textarea id="swDailyMemoBox2" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
           <textarea id="swDailyMemoBox3" class="swNotepadBox" rows="8" placeholder="隨時記錄事情……"></textarea>
-        </div>
-      </div>
-
-      <div class="swSection" id="swFixedSection">
-        <div class="swSectionHead"><b>固定提醒</b><span class="swSectionHint">到指定星期會自動加入今日清單</span></div>
-        <div class="swFixedGrid">
-          <div class="swFixedBox">
-            <h4>每週</h4>
-            <div id="swWeeklyDisplay"></div>
-          </div>
-          <div class="swFixedBox">
-            <h4>每天</h4>
-            <div id="swDailyDisplay"></div>
-          </div>
         </div>
       </div>
 
@@ -2198,7 +2184,6 @@
     const todayHead=document.getElementById('swTodayHead');
     const todayList=document.getElementById('swTodayListSection');
     const todayFlow=document.getElementById('swTodayFlowSection');
-    const fixed=document.getElementById('swFixedSection');
     const taskList=document.getElementById('taskListCard');
     const month=document.getElementById('swMonthSection');
     const todoNoteWrap=document.getElementById('todoNoteWrap');
@@ -2235,7 +2220,7 @@
         todayList.insertBefore(calendar,dailyList);
       }
     }
-    [notepad,todayList,todayFlow,fixed,month].forEach(el=>el&&el.classList.add('unifiedSection'));
+    [notepad,todayList,todayFlow,month].forEach(el=>el&&el.classList.add('unifiedSection'));
     let noteCard=document.getElementById('unifiedTodoNoteCard');
     if(!noteCard&&todoNoteWrap){
       noteCard=document.createElement('section');
@@ -2247,7 +2232,7 @@
     document.getElementById('lihuiMemoCard')?.remove();
     document.getElementById('midOneCard')?.remove();
     if(els.midOneTaskBtn) els.midOneTaskBtn.style.display='none';
-    [supabase,todayList,todayFlow,notepad,taskInput,fixed,taskList,month,noteCard,sharedMemo,repeat].forEach(el=>el&&page.appendChild(el));
+    [supabase,todayList,todayFlow,notepad,taskInput,taskList,month,noteCard,sharedMemo,repeat].forEach(el=>el&&page.appendChild(el));
     document.getElementById('shaoweiDailySection')?.remove();
     Array.from(page.children).forEach((element,index)=>{
       if(index>0&&element.id!=='flowerPage'&&element!==supabase)element.classList.add('lihuiOnly');
