@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V149：行事曆每一天固定分為行事曆與每日清單上下兩區 -->
+<!-- V150：縮小行事曆版面並移除每日清單備註欄 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V149</title>
+<title>麗卉待辦 V150</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -101,23 +101,22 @@
   .empty{min-height:90px;border:1px dashed rgba(0,0,0,.08);border-radius:14px;display:flex;align-items:center;justify-content:center;color:#8b95a3;background:rgba(255,255,255,.7);font-size:14px}
   .bottomBar{margin-top:10px;display:flex;align-items:center;justify-content:flex-end}
   .doneToggle{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:#5f6677}
-  .weekGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;align-items:stretch}
+  .weekGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;align-items:start}
   .calendarCard .cardHead{background:linear-gradient(90deg,#eef1df,#e8ecd6);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:11px 16px}
-  .day{border:1px solid var(--calendar-bd);border-radius:20px;background:var(--calendar-bg);overflow:hidden;display:flex;flex-direction:column;height:100%;min-height:100%;box-shadow:0 8px 18px rgba(68,78,96,.04)}
+  .day{border:1px solid var(--calendar-bd);border-radius:20px;background:var(--calendar-bg);overflow:hidden;display:flex;flex-direction:column;height:auto;box-shadow:0 8px 18px rgba(68,78,96,.04)}
   .day.today{background:var(--today);box-shadow:inset 0 0 0 1px rgba(179,142,0,.14)}
   .day.today .dayHead{background:var(--today)}
   .dayHead{padding:4px 16px;font-weight:900;border-bottom:1px solid rgba(0,0,0,.05);line-height:1.1;min-height:38px;background:var(--calendar-head);display:flex;align-items:center;font-size:16px;color:#22324d}
   .dayBody{padding:0;display:flex;flex-direction:column;min-height:0;flex:1}
-  .calendarEventsPart{height:260px;box-sizing:border-box;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;border-bottom:2px solid #cbd5e1}
-  .calendarDailyPart{padding:12px;display:flex;flex-direction:column;gap:10px;min-height:180px;background:#fcfbff}
+  .calendarEventsPart{height:150px;box-sizing:border-box;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:7px;border-bottom:2px solid #cbd5e1}
+  .calendarDailyPart{padding:9px;display:flex;flex-direction:column;gap:7px;min-height:44px;background:#fcfbff}
   .event{width:100%;border-radius:16px;padding:9px 10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;background:#fff;color:#36404f;border:1px solid rgba(76,88,104,.12);line-height:1.45;font-size:13px;word-break:break-word;font-weight:900;box-shadow:0 1px 0 rgba(255,255,255,.9)}
   .calendarDoneCheck{width:20px;height:20px;margin:1px 0 0;accent-color:#7c3aed;cursor:pointer}
   .calendarEventOpen{border:0;padding:0;background:transparent;color:inherit;text-align:left;font:inherit;line-height:inherit;cursor:pointer;word-break:break-word}
-  .calendarDailyItem{width:100%;border-radius:14px;padding:8px 9px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;background:#f8f5ff;color:#3730a3;border:1px solid #ddd6fe;font-size:13px;font-weight:900}
+  .calendarDailyItem{width:100%;border-radius:12px;padding:7px 8px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;align-items:start;background:#f8f5ff;color:#3730a3;border:1px solid #ddd6fe;font-size:13px;font-weight:900}
   .calendarDailyItem.done{background:#eef7ef;color:#7b8b7d;text-decoration:line-through}
   .calendarDailyText{min-width:0;line-height:1.4;word-break:break-word}
   .calendarDailyText small{display:block;margin-top:2px;color:#7c3aed;font-size:11px;text-decoration:none}
-  .calendarDailyNote{display:block;width:100%;box-sizing:border-box;margin-top:4px;border:0;border-bottom:1px solid #cbd5e1;background:transparent;color:#64748b;font-size:12px;outline:none}
   .event.done{background:var(--done-bg);color:var(--done-text);text-decoration:line-through}
   .event.overdue{color:var(--danger);background:#fbf1f3;border-color:#e8cfd6}
   .event .sub{display:block;margin-top:3px;font-size:12px;opacity:.88;font-weight:700;color:#5d6878}
@@ -746,7 +745,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V149</span>
+        <span class="pageTitleText">待辦清單 V150</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -4569,7 +4568,7 @@
           ${dailyRows.map(row=>`
             <div class="calendarDailyItem">
               <input class="calendarDoneCheck" type="checkbox" aria-label="完成 ${escapeHtml(row.title)}" data-calendar-daily-date="${key}" data-calendar-daily-key="${escapeHtml(row.key)}">
-              <span class="calendarDailyText">${escapeHtml(row.title)}${row.badge?`<small>${escapeHtml(row.badge)}</small>`:''}<input class="calendarDailyNote" type="text" data-calendar-daily-note-date="${key}" data-calendar-daily-note-key="${escapeHtml(row.key)}" value="${escapeHtml(dailyState.notes[row.key]||'')}" placeholder="備註欄"></span>
+              <span class="calendarDailyText">${escapeHtml(row.title)}${row.badge?`<small>${escapeHtml(row.badge)}</small>`:''}</span>
             </div>`).join('')}
           ${!dailyRows.length?'<div class="statusText">—</div>':''}
           </div>
@@ -4607,17 +4606,6 @@
       }
       persist({statusText:input.checked?'已完成':'已恢復'});
       renderAll();
-    });
-    document.querySelectorAll('.calendarDailyNote').forEach(input=>input.oninput=()=>{
-      const dailyDate=input.dataset.calendarDailyNoteDate||'';
-      const dailyKey=input.dataset.calendarDailyNoteKey||'';
-      if(!dailyDate||!dailyKey)return;
-      const all=loadShaoweiDailyState();
-      const dayState=all[dailyDate]&&typeof all[dailyDate]==='object'?all[dailyDate]:{flows:[],selectedItems:[],done:{},notes:{}};
-      if(!dayState.notes||typeof dayState.notes!=='object')dayState.notes={};
-      dayState.notes[dailyKey]=input.value;
-      all[dailyDate]=dayState;
-      saveShaoweiDailyState(all);
     });
     document.querySelectorAll('.calendarEventOpen[data-recurring-master-id]').forEach(btn => btn.onclick = () => {
       openRecurringModal(btn.dataset.recurringMasterId, btn.dataset.occurrenceDate);
