@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V155：縮窄星期六、日欄位，空間留給星期一至五 -->
+<!-- V156：星期六、日日期不換行並縮小週末內容字體 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V155</title>
+<title>麗卉待辦 V156</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -120,6 +120,10 @@
   .event.done{background:var(--done-bg);color:var(--done-text);text-decoration:line-through}
   .event.overdue{color:var(--danger);background:#fbf1f3;border-color:#e8cfd6}
   .event .sub{display:block;margin-top:3px;font-size:12px;opacity:.88;font-weight:700;color:#5d6878}
+  .weekGrid>.day:nth-child(n+6) .dayHead{padding-left:6px;padding-right:6px;font-size:13px;white-space:nowrap}
+  .weekGrid>.day:nth-child(n+6) .event,.weekGrid>.day:nth-child(n+6) .calendarDailyItem{padding:6px;gap:5px;font-size:11px}
+  .weekGrid>.day:nth-child(n+6) .event .sub,.weekGrid>.day:nth-child(n+6) .calendarDailyText small{font-size:10px}
+  .weekGrid>.day:nth-child(n+6) .calendarDoneCheck{width:17px;height:17px}
   .repeatTag{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;background:#f9f1d7;color:#8b6d17;font-size:11px;font-weight:900;border:1px solid #eedca0}
   .autoTag{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;background:#e8f6ff;color:#356b8e;font-size:11px;font-weight:900;border:1px solid #bcdcf2}
   .repeatList{display:grid;gap:10px}
@@ -745,7 +749,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V155</span>
+        <span class="pageTitleText">待辦清單 V156</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
