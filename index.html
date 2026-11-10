@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V154：行事曆完整顯示，每日清單內容多時可捲動 -->
+<!-- V155：縮窄星期六、日欄位，空間留給星期一至五 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V154</title>
+<title>麗卉待辦 V155</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -101,7 +101,7 @@
   .empty{min-height:90px;border:1px dashed rgba(0,0,0,.08);border-radius:14px;display:flex;align-items:center;justify-content:center;color:#8b95a3;background:rgba(255,255,255,.7);font-size:14px}
   .bottomBar{margin-top:10px;display:flex;align-items:center;justify-content:flex-end}
   .doneToggle{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:#5f6677}
-  .weekGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;align-items:start}
+  .weekGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) repeat(2,minmax(0,.62fr));gap:10px;align-items:start}
   .calendarCard .cardHead{background:linear-gradient(90deg,#eef1df,#e8ecd6);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:11px 16px}
   .day{border:1px solid var(--calendar-bd);border-radius:20px;background:var(--calendar-bg);overflow:hidden;display:flex;flex-direction:column;height:auto;box-shadow:0 8px 18px rgba(68,78,96,.04)}
   .day.today{background:var(--today);box-shadow:inset 0 0 0 1px rgba(179,142,0,.14)}
@@ -359,7 +359,7 @@
     .page{width:1680px !important;min-width:1680px !important;margin:12px !important;}
     .memoDualGrid{grid-template-columns:1fr 1fr !important;}
     .boardWrap{grid-template-columns:1fr 1fr 1fr !important;}
-    .weekGrid{grid-template-columns:repeat(7,1fr) !important;}
+    .weekGrid{grid-template-columns:repeat(5,minmax(0,1fr)) repeat(2,minmax(0,.62fr)) !important;}
     .row1{grid-template-columns:minmax(0,0.95fr) 320px 118px 95px 95px 95px !important;}
     .row2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) 100px repeat(7,80px) !important;}
     .repeatTop{grid-template-columns:minmax(0,1fr) auto !important;}
@@ -745,7 +745,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V154</span>
+        <span class="pageTitleText">待辦清單 V155</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
