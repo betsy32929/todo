@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V150：縮小行事曆版面並移除每日清單備註欄 -->
+<!-- V151：每日清單的提醒值班於星期六、日不顯示 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V150</title>
+<title>麗卉待辦 V151</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -745,7 +745,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V150</span>
+        <span class="pageTitleText">待辦清單 V151</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -1736,7 +1736,11 @@
     const now=targetDate instanceof Date&&!Number.isNaN(targetDate.getTime())?targetDate:new Date();
     const config=loadShaoweiConfig();
     const rows=[];
-    config.today.forEach((item,i)=>rows.push({key:`fixed|today|${i}`,title:item.title,meta:'',badge:item.badge||'今日'}));
+    const isWeekend=now.getDay()===0||now.getDay()===6;
+    config.today.forEach((item,i)=>{
+      if(isWeekend&&String(item.title||'').trim()==='提醒值班')return;
+      rows.push({key:`fixed|today|${i}`,title:item.title,meta:'',badge:item.badge||'今日'});
+    });
     config.weekly.filter(item=>Number(item.day)===now.getDay()).forEach((item,i)=>rows.push({key:`weekly|${now.getDay()}|${i}`,title:item.title,meta:'',badge:item.badge||`星期${'日一二三四五六'[now.getDay()]}`}));
     Object.entries(config.flows).forEach(([flow,titles])=>titles.forEach((title,i)=>{
       const key=`flow|${flow}|${i}`;
