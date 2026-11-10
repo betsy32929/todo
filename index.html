@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- V152：星期六、日不顯示任何每日清單事項 -->
+<!-- V153：每日清單只顯示今天與未來日期，過去日期不再產生 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>麗卉待辦 V152</title>
+<title>麗卉待辦 V153</title>
 <style>
   :root{
     --bg:#fffafc; --card:#ffffff; --line:#ead9e2; --text:#2f3440; --muted:#7b8090;
@@ -745,7 +745,7 @@
   <section class="card">
     <div class="cardHead compact1cm">
       <div class="pageTitleRow" style="width:100%;">
-        <span class="pageTitleText">待辦清單 V152</span>
+        <span class="pageTitleText">待辦清單 V153</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="supabaseTopBtn" id="supabaseTopToggle" type="button" aria-expanded="false">Supabase 設定</button>
           <div class="personSwitch" aria-label="使用者切換">
@@ -4537,7 +4537,7 @@
       if(!Array.isArray(dailyState.selectedItems))dailyState.selectedItems=[];
       if(!dailyState.done||typeof dailyState.done!=='object')dailyState.done={};
       if(!dailyState.notes||typeof dailyState.notes!=='object')dailyState.notes={};
-      const dailyRows=shaoweiTodayItems(dailyState,dailyStateAll.__retained,d).filter(row=>!dailyState.done[row.key]);
+      const dailyRows=key<todayStr()?[]:shaoweiTodayItems(dailyState,dailyStateAll.__retained,d).filter(row=>!dailyState.done[row.key]);
       const day = document.createElement('div');
       day.className = 'day' + (key === todayStr() ? ' today' : '');
       day.innerHTML = `
